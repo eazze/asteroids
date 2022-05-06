@@ -15,6 +15,8 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 
+import de.hs_kl.gatav.flyingsaucerfull.objects.SpaceShip;
+
 public class MainActivity extends Activity  {
 
     private SpaceGLSurfaceView spaceGLSurfaceView;
@@ -30,9 +32,6 @@ public class MainActivity extends Activity  {
         mWindowManager = (WindowManager)getSystemService(WINDOW_SERVICE);
 
         mDisplay = mWindowManager.getDefaultDisplay();
-
-        mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
-        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -66,13 +65,14 @@ public class MainActivity extends Activity  {
 
 
 
-        /*Button buttonControlLeft = (Button)findViewById(R.id.controlLeft);
+        Button buttonControlLeft = (Button)findViewById(R.id.controlLeft);
         buttonControlLeft.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                spaceGLSurfaceView.setShipVelocity(1, 0, 1);
+                spaceGLSurfaceView.setRotationShip(true);
                 if(event.getAction() == MotionEvent.ACTION_UP){
-                    spaceGLSurfaceView.setShipVelocity(0, 0, 0);
+                    spaceGLSurfaceView.stopRotationShip();
+                    buttonControlLeft.setPressed(!buttonControlLeft.isPressed());
                     // Do what you want
                     return true;
                 }
@@ -81,13 +81,25 @@ public class MainActivity extends Activity  {
         });
 
         Button buttonControlRight = (Button)findViewById(R.id.controlRight);
-        buttonControlRight.setOnTouchListener(controlRight);
+        buttonControlRight.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                spaceGLSurfaceView.setRotationShip(false);
+                if(event.getAction() == MotionEvent.ACTION_UP){
+                    spaceGLSurfaceView.stopRotationShip();
+                    buttonControlRight.setPressed(!buttonControlRight.isPressed());
+                    // Do what you want
+                    return true;
+                }
+                return false;
+            }
+        });/*
 
         Button buttonControlShot = (Button)findViewById(R.id.controlShot);
-        buttonControlShot.setOnTouchListener(controlShot);
+        buttonControlShot.setOnTouchListener(controlShot);*/
 
         Button buttonControlMenu = (Button)findViewById(R.id.controlMenu);
-        buttonControlMenu.setOnTouchListener(controlMenu);*/
+        buttonControlMenu.setOnClickListener(controlMenu);
 
 
         //addContentView(gameWidgets, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -105,73 +117,24 @@ public class MainActivity extends Activity  {
         //mSensorManager.unregisterListener(this);
     }
 
-   /* private View.OnTouchListener controlMenu = new View.OnTouchListener() {
+    private View.OnClickListener controlMenu = new View.OnClickListener() {
         public void onClick(View v) {
-            Log.d("Thrust", "1");
+            //Log.d("Thrust", "1");
         }
     };
 
-    private View.OnTouchListener controlThrust = new View.OnTouchListener() {
-        public void onClick(View v) {
-            spaceGLSurfaceView.setShipVelocity(1, 0, 1);
-        }
-    };
-
-    private View.OnTouchListener controlShot = new View.OnTouchListener() {
-        public void onClick(View v) {
-            Log.d("Thrust", "1");
-        }
-    };
-
-    private View.OnTouchListener controlLeft = new View.OnTouchListener() {
-        public void onClick(View v) {
-            Log.d("Left", "1");
-        }
-    };
-
-    private View.OnTouchListener controlRight = new View.OnTouchListener() {
-        public void onClick(View v) {
-            Log.d("Thrust", "1");
-        }
-    };*/
-
-
-/*
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        if(event.sensor.getType() != Sensor.TYPE_ACCELEROMETER)
-            return;
-
-        switch(mDisplay.getRotation()) {
-            case Surface.ROTATION_0:
-                //Log.d("rot", ""+0);
-                spaceGLSurfaceView.setShipVelocity(-event.values[0], 0, -event.values[1]);
-                break;
-            case Surface.ROTATION_90:
-                //Log.d("rot", ""+90);
-                spaceGLSurfaceView.setShipVelocity(event.values[1], 0, -event.values[0]);
-                break;
-            case Surface.ROTATION_180:
-                //Log.d("rot", ""+180);
-                spaceGLSurfaceView.setShipVelocity(event.values[0], 0, event.values[1]);
-                break;
-            case Surface.ROTATION_270:
-                //Log.d("rot", ""+270);
-                spaceGLSurfaceView.setShipVelocity(-event.values[1], 0, event.values[0]);
-                break;
-        }
-    }*/
 
     private void accelerateTouch() {
-        for(float i = 0; i < 2; i += 0.2f) {
-            spaceGLSurfaceView.setShipVelocity(i, 0, i);
+        float vecDir[] = spaceGLSurfaceView.getShipViewDirection();
+        for(float i = 0; i < 10; i += 1) {
+            spaceGLSurfaceView.setShipVelocity(vecDir[0]*i, vecDir[1], vecDir[2]*i);
         }
-
     }
 
     private void accelerateStop() {
-        for(float i = 2; i > 0; i -= 0.5f) {
-            spaceGLSurfaceView.setShipVelocity(i, 0, i);
+        float vecDir[] = spaceGLSurfaceView.getShipViewDirection();
+        for(float i = 2f; i > 0; i -= 0.5f) {
+            spaceGLSurfaceView.setShipVelocity(vecDir[0]*i, vecDir[1], vecDir[2]*i);
             SystemClock.sleep(120);
         }
         spaceGLSurfaceView.setShipVelocity(0, 0, 0);

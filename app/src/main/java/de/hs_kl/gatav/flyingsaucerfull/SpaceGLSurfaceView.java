@@ -436,6 +436,37 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             gl.glEnable(GL10.GL_DEPTH_TEST);
         }
 
+
+    }
+    public void setRotationShip(boolean dir){
+        ship.setRotation(dir);
+        getShipViewDirection();
+
+    }
+
+    public void stopRotationShip() {
+        ship.stopRotation();
+        getShipViewDirection();
+    }
+
+    public float[] getShipViewDirection() {
+        float[] dirVec = new float[3];
+        dirVec[1] = 0f;
+        Log.d("rotation", " " + ship.getRotationShip());
+        if(ship.getRotationShip() >= 0 && ship.getRotationShip() <= 90) {
+            dirVec[0] = dirVec[2] = ship.getRotationShip()/100f;
+        } else if(ship.getRotationShip() >= 90 && ship.getRotationShip() <= 180) {
+            dirVec[0] = ship.getRotationShip()/100f;
+            dirVec[2] = -ship.getRotationShip()/100f;
+        }
+        else if(ship.getRotationShip() >= 180 && ship.getRotationShip() <= 270) {
+            dirVec[0] = dirVec[2] = -ship.getRotationShip()/100f;
+        }
+        else if(ship.getRotationShip() >= 270 && ship.getRotationShip() <= 360) {
+            dirVec[2] = ship.getRotationShip()/100f;
+            dirVec[0] = -ship.getRotationShip()/100f;
+        }
+        return dirVec;
     }
 
 }

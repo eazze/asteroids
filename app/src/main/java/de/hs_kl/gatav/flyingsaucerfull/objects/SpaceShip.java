@@ -12,6 +12,9 @@ public class SpaceShip extends SpaceObject {
     private static float FULL_HEALTH=1.0f;
 
     private float rotation = 0.0f;
+    private boolean dir;
+    private float rotateSpeed = 10f;
+    private boolean rotateShip = false;
     private float angularVelocity = 10.0f;
     private float deathRotationVelocity = 1.0f;
 
@@ -32,7 +35,7 @@ public class SpaceShip extends SpaceObject {
 
     //@formatter:off
     private static final float ring_vertices[] = {
-            -0.230970f, 0.065390f, 0.000000f,
+            -0.230970f, 0.065390f, 0.000000f/*,
             -0.500000f, -0.000000f, 0.000000f,
             -0.230970f, -0.065390f, 0.000000f,
             -0.213388f, 0.065390f, -0.088388f,
@@ -79,10 +82,10 @@ public class SpaceShip extends SpaceObject {
             -0.163320f, -0.065390f, 0.163320f,
             -0.213388f, 0.065390f, 0.088388f,
             -0.461940f, -0.000000f, 0.191342f,
-            -0.213388f, -0.065390f, 0.088388f
+            -0.213388f, -0.065390f, 0.088388f*/
     };
     private static final short ring_quads[] = {
-            5-1, 6-1, 3-1, 2-1,
+            5-1, 6-1, 3-1, 2-1/*,
             2-1, 1-1, 4-1, 5-1,
             8-1, 9-1, 6-1, 5-1,
             7-1, 8-1, 5-1, 4-1,
@@ -129,7 +132,7 @@ public class SpaceShip extends SpaceObject {
             9-1, 7-1, 4-1, 6-1,
             12-1, 10-1, 7-1, 9-1,
             15-1, 13-1, 10-1, 12-1,
-            18-1, 16-1, 13-1, 15-1
+            18-1, 16-1, 13-1, 15-1*/
     };
 
     private static final float body_vertices[] = {
@@ -465,7 +468,7 @@ public class SpaceShip extends SpaceObject {
     }
 
     private void setRingColor(GL10 gl) {
-        float r, g, b;
+        /*float r, g, b;
         if (ringHealth > 0.6f) {
             r = colorEnergyHigh[0];
             g = colorEnergyHigh[1];
@@ -486,19 +489,46 @@ public class SpaceShip extends SpaceObject {
             }
         }
 
-        gl.glColor4f(r, g, b, 0);
+        gl.glColor4f(r, g, b, 0);*/
     }
 
     @Override
     public void update(float fracSec) {
+        if(rotateShip) {
+            if(dir) {
+                if(rotation == 360f || rotation > 360f) rotation = 0;
+                rotation += fracSec * angularVelocity * deathRotationVelocity * rotateSpeed;
+                ringRotation += fracSec * angularVelocity * deathRotationVelocity * rotateSpeed;
+            } else {
+                if(rotation == -360f || rotation < -360f) rotation = 0;
+                rotation -= fracSec * angularVelocity * deathRotationVelocity * rotateSpeed;
+                ringRotation -= fracSec * angularVelocity * deathRotationVelocity * rotateSpeed; }
         updatePosition(fracSec);
 
         /*if(ringHealth<=0.2) deathRotationVelocity=20.0f;
-        if(ringHealth<=0.0) {deathRotationVelocity=0.0f; }
+        if(ringHealth<=0.0) {deathRotationVelocity=0.0f; }*/
 
-        rotation += fracSec * angularVelocity * deathRotationVelocity;
+        /*rotation += fracSec * angularVelocity * deathRotationVelocity;
         ringRotation += fracSec * ringAngularVelocity;*/
 
+
+
+    }}
+
+    public float getRotationShip() {
+        return rotation;
+    }
+
+
+
+    public void setRotation(boolean dir) {
+        rotateShip = true;
+        this.dir = dir;
+
+    }
+
+    public void stopRotation() {
+        rotateShip = false;
     }
 
 }
