@@ -3,4 +3,9 @@
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="leftControl">Left</string>
+    <string name="thrustControl">Thrust</string>
+    <string name="shotControl">Shot</string>
+    <string name="menuControl">Menu</string>
+    <string name="rightControl">right</string>
 </resources>

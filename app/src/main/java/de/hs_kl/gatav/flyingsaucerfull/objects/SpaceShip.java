@@ -493,11 +493,11 @@ public class SpaceShip extends SpaceObject {
     public void update(float fracSec) {
         updatePosition(fracSec);
 
-        if(ringHealth<=0.2) deathRotationVelocity=20.0f;
+        /*if(ringHealth<=0.2) deathRotationVelocity=20.0f;
         if(ringHealth<=0.0) {deathRotationVelocity=0.0f; }
 
         rotation += fracSec * angularVelocity * deathRotationVelocity;
-        ringRotation += fracSec * ringAngularVelocity;
+        ringRotation += fracSec * ringAngularVelocity;*/
 
     }
 

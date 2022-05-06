@@ -34,10 +34,10 @@ public abstract class SpaceObject {
 
     public void setYRot()
     {
-        if(velocity[0]*velocity[0]+velocity[1]*velocity[1]+velocity[2]*velocity[2] > 1E-20)
+        /*if(velocity[0]*velocity[0]+velocity[1]*velocity[1]+velocity[2]*velocity[2] > 1E-20)
             yRot=(float)(Math.acos(velocity[2]/Math.sqrt(velocity[0]*velocity[0]+velocity[2]*velocity[2]))*180/Math.PI);
         if(velocity[0]<0)
-            yRot=-yRot;
+            yRot=-yRot;*/
     }
 
     protected void updatePosition(float fracSec) {
