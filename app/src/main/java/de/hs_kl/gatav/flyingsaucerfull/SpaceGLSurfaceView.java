@@ -34,10 +34,16 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
     private static final float asteroidMinScale = 0.8f;
     private static final float asteroidMaxScale = 1.0f;
 
+    private float[] dirVec = {0f, 0f, 1f};
+
+
     private ArrayList<Obstacle> obstacles = new ArrayList<Obstacle>();
     private SpaceShip ship = new SpaceShip();
     private Starship starship = new Starship();
-    { obstacles.add(starship); }
+
+    {
+        obstacles.add(starship);
+    }
 
     public SpaceGLSurfaceView(Context context) {
         super(context);
@@ -75,6 +81,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             lastFrameTime = System.currentTimeMillis();
         }
 
+
         @Override
         public void onDrawFrame(GL10 gl) {
 
@@ -85,6 +92,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
 
             // scene updates
             updateShip(fracSec);
+
             updateObstacles(fracSec);
 
 
@@ -98,7 +106,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             gl11.glLoadMatrixf(modelViewScene, 0);
 
             ship.draw(gl);
-            for (Obstacle obstacle: obstacles) {
+            for (Obstacle obstacle : obstacles) {
                 obstacle.draw(gl);
             }
         }
@@ -126,7 +134,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             float squaredHitDistance = ((obj1.scale + obj2.scale) / 2) * ((obj1.scale + obj2.scale) / 2);
             float squaredDistance = (obj1X - obj2X) * (obj1X - obj2X) + (obj1Z - obj2Z) * (obj1Z - obj2Z);
 
-            if(squaredDistance < squaredHitDistance)
+            if (squaredDistance < squaredHitDistance)
                 return true;
             return false;
         }
@@ -136,7 +144,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             ArrayList<Obstacle> obstaclesToBeRemoved = new ArrayList<Obstacle>();
 
             // position update on all obstacles
-            for(Obstacle obstacle : obstacles) {
+            for (Obstacle obstacle : obstacles) {
                 obstacle.update(fracSec);
             }
 
@@ -154,8 +162,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
                         || (obstacle.getZ() < boundaryBottom - offset)) {
                     if (obstacle instanceof Starship) {
                         ((Starship) obstacle).setInactive();
-                    }
-                    else
+                    } else
                         obstaclesToBeRemoved.add(obstacle);
                 }
             }
@@ -182,25 +189,25 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
                 }
             }
             // remove obsolete obstacles
-            for (Obstacle obstacle: obstaclesToBeRemoved) {
+            for (Obstacle obstacle : obstaclesToBeRemoved) {
                 obstacles.remove(obstacle);
             }
             obstaclesToBeRemoved.clear();
 
 
             // obstacle collision handling with each other
-            for (int i=0; i<=obstacles.size()-2; i++) {
+            for (int i = 0; i <= obstacles.size() - 2; i++) {
                 Obstacle obstacle = obstacles.get(i);
                 float ax = obstacle.getX();
                 float az = obstacle.getZ();
 
                 // check for collision with other obstacle
-                for(int j=i+1; j<=obstacles.size()-1; j++) {
+                for (int j = i + 1; j <= obstacles.size() - 1; j++) {
                     Obstacle otherObstacle = obstacles.get(j);
                     float oax = otherObstacle.getX();
                     float oaz = otherObstacle.getZ();
 
-                    if(areColliding(obstacle, otherObstacle)) {
+                    if (areColliding(obstacle, otherObstacle)) {
                         // collisions: let them bounce off each other
                         // http://de.wikipedia.org/wiki/ -> ElastischerStoß
 
@@ -232,36 +239,37 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
 
                         // asteroid-asteroid or borg-borg
                         // => inclined central elastic collision with identical masses
-                        if(obstacle.getClass() == otherObstacle.getClass()) {
+                        if (obstacle.getClass() == otherObstacle.getClass()) {
                             cv1[0] = cvt1[0] + cvz2[0];
                             cv1[2] = cvt1[2] + cvz2[2];
 
                             cv2[0] = cvt2[0] + cvz1[0];
                             cv2[2] = cvt2[2] + cvz1[2];
-                        }
-                        else{  // different scenarios
+                        } else {  // different scenarios
 
                             // one obstacle is borg cube, one is asteroid
                             // let the borg cube push the little asteroid out of the way - borg is much stronger than asteroid
                             // => inclined central elastic collision with one superior mass
-                            if(otherObstacle instanceof BorgCube && obstacle instanceof Asteroid) {
-                                cv1[0] = cvt1[0] - cvz1[0] + cvz2[0]*2.0f;
-                                cv1[2] = cvt1[2] - cvz1[2] + cvz2[2]*2.0f;
-                            }else if(obstacle instanceof BorgCube && otherObstacle instanceof Asteroid){
-                                cv2[0] = cvt2[0] - cvz2[0] + cvz1[0]*2.0f;
-                                cv2[2] = cvt2[2] - cvz2[2] + cvz1[2]*2.0f;
+                            if (otherObstacle instanceof BorgCube && obstacle instanceof Asteroid) {
+                                cv1[0] = cvt1[0] - cvz1[0] + cvz2[0] * 2.0f;
+                                cv1[2] = cvt1[2] - cvz1[2] + cvz2[2] * 2.0f;
+                            } else if (obstacle instanceof BorgCube && otherObstacle instanceof Asteroid) {
+                                cv2[0] = cvt2[0] - cvz2[0] + cvz1[0] * 2.0f;
+                                cv2[2] = cvt2[2] - cvz2[2] + cvz1[2] * 2.0f;
                             }
 
                             //ODOT
                         }
 
-                        if(obstacle instanceof Asteroid) ((Asteroid)obstacle).angularVelocity *= -1.0f;
-                        if(otherObstacle instanceof Asteroid) ((Asteroid)otherObstacle).angularVelocity *= -1.0f;
+                        if (obstacle instanceof Asteroid)
+                            ((Asteroid) obstacle).angularVelocity *= -1.0f;
+                        if (otherObstacle instanceof Asteroid)
+                            ((Asteroid) otherObstacle).angularVelocity *= -1.0f;
                     }
                 }
             }
             // remove obsolete obstacles
-            for (Obstacle obstacle: obstaclesToBeRemoved) {
+            for (Obstacle obstacle : obstaclesToBeRemoved) {
                 obstacles.remove(obstacle);
             }
             obstaclesToBeRemoved.clear();
@@ -271,11 +279,11 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             if (obstacleCount > obstacles.size()) {
                 for (int i = 0; i < obstacleCount - obstacles.size(); ++i) {
                     // determine what kind of obstacle is spawned next
-                    int type = Math.random() < 0.85?1:2;  // 1 Asteroid, 2 BorgCube
+                    int type = Math.random() < 0.85 ? 1 : 2;  // 1 Asteroid, 2 BorgCube
 
                     float scale = 1.0f;
-                    if(type == 1) {
-                        scale = (float)Math.random() * (asteroidMaxScale - asteroidMinScale) + asteroidMinScale;
+                    if (type == 1) {
+                        scale = (float) Math.random() * (asteroidMaxScale - asteroidMinScale) + asteroidMinScale;
                     }
 
                     float spawnX = 0.0f;
@@ -284,36 +292,34 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
                     float velocity[] = new float[3];
 
                     // determine source and destination quadrant
-                    int sourceCode = ((Math.random()<0.5?0:1)<<1) | (Math.random()<0.5?0:1);  // source quadrant
-                    int destCode = sourceCode ^ 3;	// destination quadrant is opposite of source
+                    int sourceCode = ((Math.random() < 0.5 ? 0 : 1) << 1) | (Math.random() < 0.5 ? 0 : 1);  // source quadrant
+                    int destCode = sourceCode ^ 3;    // destination quadrant is opposite of source
                     //Log.d("Code", sourceCode+" "+destCode);
 
-					/* sourceCode, destCode
-					 * +----+----+
-					 * | 00 | 01 |
-					 * +----+----+
-					 * | 10 | 11 |
-					 * +----+----+
-					 */
+                    /* sourceCode, destCode
+                     * +----+----+
+                     * | 00 | 01 |
+                     * +----+----+
+                     * | 10 | 11 |
+                     * +----+----+
+                     */
 
                     // calculate source vertex position, <0.5 horizontal, else vertical
-                    if(Math.random()<0.5){  // horizontal placing, top or bottom
-                        spawnZ = (sourceCode&2)>0?boundaryBottom-spawnOffset : boundaryTop+spawnOffset;
-                        spawnX = (sourceCode&1)>0?boundaryRight*(float)Math.random() : boundaryLeft*(float)Math.random();
-                    }
-                    else{  // vertical placing, left or right
-                        spawnZ = (sourceCode&2)>0?boundaryBottom*(float)Math.random() : boundaryTop*(float)Math.random();
-                        spawnX = (sourceCode&1)>0?boundaryRight+spawnOffset : boundaryLeft-spawnOffset;
+                    if (Math.random() < 0.5) {  // horizontal placing, top or bottom
+                        spawnZ = (sourceCode & 2) > 0 ? boundaryBottom - spawnOffset : boundaryTop + spawnOffset;
+                        spawnX = (sourceCode & 1) > 0 ? boundaryRight * (float) Math.random() : boundaryLeft * (float) Math.random();
+                    } else {  // vertical placing, left or right
+                        spawnZ = (sourceCode & 2) > 0 ? boundaryBottom * (float) Math.random() : boundaryTop * (float) Math.random();
+                        spawnX = (sourceCode & 1) > 0 ? boundaryRight + spawnOffset : boundaryLeft - spawnOffset;
                     }
 
                     // calculate destination vertex position, <0.5 horizontal, else vertical
-                    if(Math.random()<0.5){  // horizontal placing, top or bottom
-                        velocity[2] = (destCode&2)>0?boundaryBottom-spawnOffset : boundaryTop+spawnOffset;
-                        velocity[0] = (destCode&1)>0?boundaryRight*(float)Math.random() : boundaryLeft*(float)Math.random();
-                    }
-                    else{  // vertical placing, left or right
-                        velocity[2] = (destCode&2)>0?boundaryBottom*(float)Math.random() : boundaryTop*(float)Math.random();
-                        velocity[0] = (destCode&1)>0?boundaryRight+spawnOffset : boundaryLeft-spawnOffset;
+                    if (Math.random() < 0.5) {  // horizontal placing, top or bottom
+                        velocity[2] = (destCode & 2) > 0 ? boundaryBottom - spawnOffset : boundaryTop + spawnOffset;
+                        velocity[0] = (destCode & 1) > 0 ? boundaryRight * (float) Math.random() : boundaryLeft * (float) Math.random();
+                    } else {  // vertical placing, left or right
+                        velocity[2] = (destCode & 2) > 0 ? boundaryBottom * (float) Math.random() : boundaryTop * (float) Math.random();
+                        velocity[0] = (destCode & 1) > 0 ? boundaryRight + spawnOffset : boundaryLeft - spawnOffset;
                     }
 
                     // calculate velocity
@@ -325,23 +331,23 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
                     boolean positionOk = true;
 
                     // check distance to other obstacles
-                    for(Obstacle obstacle: obstacles) {
+                    for (Obstacle obstacle : obstacles) {
                         float minDistance = 0.5f * scale + 0.5f * obstacle.scale + minSpawnDistanceBetweenObstacles;
-                        if(Math.abs(spawnX - obstacle.getX()) < minDistance
+                        if (Math.abs(spawnX - obstacle.getX()) < minDistance
                                 && Math.abs(spawnZ - obstacle.getZ()) < minDistance)
-                            positionOk = false;	// Distance too small -> invalid position
+                            positionOk = false;    // Distance too small -> invalid position
                     }
 
                     // check distance to player
                     float minPlayerDistance = 0.5f * scale + 0.5f * ship.scale + minSpawnDistanceToPlayer;
-                    if(Math.abs(spawnX - ship.getX()) < minPlayerDistance &&
+                    if (Math.abs(spawnX - ship.getX()) < minPlayerDistance &&
                             Math.abs(spawnZ - ship.getZ()) < minPlayerDistance)
-                        positionOk = false;	// Distance to player too small -> invalid position
+                        positionOk = false;    // Distance to player too small -> invalid position
 
                     if (!positionOk)
                         continue; // Invalid spawn position -> try again next time
 
-                    if(type == 1) {
+                    if (type == 1) {
                         Asteroid newAsteroid = new Asteroid();
                         newAsteroid.scale = scale;
                         newAsteroid.randomizeRotationAxis();
@@ -350,7 +356,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
                         newAsteroid.velocity = velocity;
                         obstacles.add(newAsteroid);
                     }
-                    if(type == 2){
+                    if (type == 2) {
                         BorgCube newBorgCube = new BorgCube();
                         newBorgCube.scale = scale;
                         newBorgCube.velocity = velocity;
@@ -361,16 +367,18 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             }
 
             // check for reactivation of Starship enterprise
-            if(starship.enabled && starship.reActivate()) {
-                float x1, z1, x2, z2, v[]=new float[2];
+            if (starship.enabled && starship.reActivate()) {
+                float x1, z1, x2, z2, v[] = new float[2];
 
-                x1=boundaryLeft-starship.scale*0.5f;
-                x2=boundaryRight+starship.scale;
-                z1=((float)(Math.random())<0.5f?-1f:1f)*(float)(Math.random())*boundaryTop*1.5f;
-                z2=((float)(Math.random())<0.5f?-1f:1f)*(float)(Math.random())*boundaryTop*1.5f;
-                v[0]=x2-x1; v[1]=z2-z1;
+                x1 = boundaryLeft - starship.scale * 0.5f;
+                x2 = boundaryRight + starship.scale;
+                z1 = ((float) (Math.random()) < 0.5f ? -1f : 1f) * (float) (Math.random()) * boundaryTop * 1.5f;
+                z2 = ((float) (Math.random()) < 0.5f ? -1f : 1f) * (float) (Math.random()) * boundaryTop * 1.5f;
+                v[0] = x2 - x1;
+                v[1] = z2 - z1;
                 normalize(v);
-                v[0]*=4; v[1]*=4;
+                v[0] *= 4;
+                v[1] *= 4;
 
                 starship.setPosition(x1, 0, z1);
                 starship.setVelocity(v[0], 0.0f, v[1]);
@@ -398,7 +406,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             gl.glMatrixMode(GL10.GL_MODELVIEW);
             gl.glLoadIdentity();
 
-            float desired_height=10.0f;
+            float desired_height = 10.0f;
             // We want to be able to see the range of 5 to -5 units at the y
             // axis (height=10).
             // To achieve this we have to pull the camera towards the positive z axis
@@ -415,11 +423,11 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
 
             // window boundaries
             // z range is the desired height
-            boundaryTop = desired_height/2;
-            boundaryBottom = -desired_height/2;
+            boundaryTop = desired_height / 2;
+            boundaryBottom = -desired_height / 2;
             // x range is the desired width
-            boundaryLeft = -(desired_height/2 * aspectRatio);
-            boundaryRight = (desired_height/2 * aspectRatio);
+            boundaryLeft = -(desired_height / 2 * aspectRatio);
+            boundaryRight = (desired_height / 2 * aspectRatio);
         }
 
         @Override
@@ -438,7 +446,8 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
 
 
     }
-    public void setRotationShip(boolean dir){
+
+    public void setRotationShip(boolean dir) {
         ship.setRotation(dir);
         getShipViewDirection();
 
@@ -450,24 +459,57 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
     }
 
     public float[] getShipViewDirection() {
-        float[] dirVec = new float[3];
-        dirVec[1] = 0f;
+
         Log.d("rotation", " " + ship.getRotationShip());
-        if(ship.getRotationShip() >= 0 && ship.getRotationShip() <= 90) {
-            dirVec[0] = dirVec[2] = ship.getRotationShip()/100f;
-        } else if(ship.getRotationShip() >= 90 && ship.getRotationShip() <= 180) {
-            dirVec[0] = ship.getRotationShip()/100f;
-            dirVec[2] = -ship.getRotationShip()/100f;
+        float shipRotation = ship.getRotationShip();
+        if (shipRotation < 0f) shipRotation = 360f + shipRotation;
+        if (shipRotation > 359f) {
+            shipRotation = 0;
         }
-        else if(ship.getRotationShip() >= 180 && ship.getRotationShip() <= 270) {
-            dirVec[0] = dirVec[2] = -ship.getRotationShip()/100f;
+        if (shipRotation > 0) {
+            Log.d("Rotation: ", " " + shipRotation);
+            dirVec[0] = dirVec[0] * (float) Math.cos((double) shipRotation) - dirVec[2] * (float) Math.sin((double) shipRotation);
+            dirVec[2] = dirVec[0] * (float) Math.sin((double) shipRotation) + dirVec[2] * (float) Math.cos((double) shipRotation);
+            normalize(dirVec);
+            /*float m = (float) Math.sqrt((double) (dirVec[0] * dirVec[0] + dirVec[2] * dirVec[2]));
+            dirVec[0] /= m;
+            dirVec[2] /= m;
+            Log.d("X: ", " "+ dirVec[0]);
+            Log.d("Y: ", " "+ dirVec[2]);
         }
-        else if(ship.getRotationShip() >= 270 && ship.getRotationShip() <= 360) {
-            dirVec[2] = ship.getRotationShip()/100f;
-            dirVec[0] = -ship.getRotationShip()/100f;
+        /*
+        if(shipRotation >= 0 && shipRotation <= 90) {
+            if(shipRotation/100f == 0f) {
+                dirVec[0] += 1;
+                dirVec[2] += 0.0f;
+            }
+            if(shipRotation/100f > 0f) {
+             dirVec[0] += -(float) Math.cos((double) shipRotation);
+             dirVec[2] += -(float) Math.sin((double) shipRotation);}
+            Log.d("Grad", "<90");
+        } else if(shipRotation >= 90 && shipRotation <= 180) {
+            dirVec[0] += (float) Math.cos((double) shipRotation);
+            dirVec[2] += -(float) Math.sin((double) shipRotation);
+            Log.d("Grad", "<180");
         }
-        return dirVec;
-    }
+        else if(shipRotation >= 180 && shipRotation <= 270) {
+            dirVec[0] += (float) Math.cos((double) shipRotation);
+            dirVec[2] += (float) Math.sin((double) shipRotation);;
+            Log.d("Grad", "<270");
+        }
+        else if(shipRotation >= 270 && shipRotation <= 360) {
+            dirVec[2] += -(float) Math.cos((double) shipRotation);;
+            dirVec[0] += (float) Math.sin((double) shipRotation);;
+            Log.d("Grad", "<360");
+        }*/
+
+        /*dirVec[2] = (float) Math.cos((double) shipRotation);
+        dirVec[0] = -(float) Math.sin((double) shipRotation);*/
+
+        }
+            return dirVec;
+        }
+
 
 }
 

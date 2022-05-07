@@ -53,9 +53,13 @@ public class MainActivity extends Activity  {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 accelerateTouch();
+
+
+
                 if(event.getAction() == MotionEvent.ACTION_UP){
-                    accelerateStop();
+                   accelerateStop();
                     buttonControlThrust.setPressed(!buttonControlThrust.isPressed());
+
                     // Do what you want
                     return true;
                 }
@@ -69,7 +73,7 @@ public class MainActivity extends Activity  {
         buttonControlLeft.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                spaceGLSurfaceView.setRotationShip(true);
+                spaceGLSurfaceView.setRotationShip(false);
                 if(event.getAction() == MotionEvent.ACTION_UP){
                     spaceGLSurfaceView.stopRotationShip();
                     buttonControlLeft.setPressed(!buttonControlLeft.isPressed());
@@ -84,7 +88,7 @@ public class MainActivity extends Activity  {
         buttonControlRight.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                spaceGLSurfaceView.setRotationShip(false);
+                spaceGLSurfaceView.setRotationShip(true);
                 if(event.getAction() == MotionEvent.ACTION_UP){
                     spaceGLSurfaceView.stopRotationShip();
                     buttonControlRight.setPressed(!buttonControlRight.isPressed());
@@ -122,21 +126,29 @@ public class MainActivity extends Activity  {
             //Log.d("Thrust", "1");
         }
     };
+    /*
+    private View.OnClickListener controlThrust = new View.OnClickListener() {
+        public void onClick(View v) {
+            //Log.d("Thrust", "1");
+        }
+    };*/
 
 
     private void accelerateTouch() {
         float vecDir[] = spaceGLSurfaceView.getShipViewDirection();
-        for(float i = 0; i < 10; i += 1) {
-            spaceGLSurfaceView.setShipVelocity(vecDir[0]*i, vecDir[1], vecDir[2]*i);
-        }
+        spaceGLSurfaceView.setShipVelocity(vecDir[0]*10f, 0, vecDir[2]*10f);
+        /*for(float i = 1; i < 5; i += 1) {
+            spaceGLSurfaceView.setShipVelocity(vecDir[0]*i, 0, vecDir[2]*i);
+        }*/
     }
 
     private void accelerateStop() {
-        float vecDir[] = spaceGLSurfaceView.getShipViewDirection();
-        for(float i = 2f; i > 0; i -= 0.5f) {
+        //float vecDir[] = spaceGLSurfaceView.getShipViewDirection();
+        //spaceGLSurfaceView.setShipVelocity(vecDir[0], 0, vecDir[2]);
+        /*for(float i = 2f; i > 0; i -= 0.5f) {
             spaceGLSurfaceView.setShipVelocity(vecDir[0]*i, vecDir[1], vecDir[2]*i);
             SystemClock.sleep(120);
-        }
+        }*/
         spaceGLSurfaceView.setShipVelocity(0, 0, 0);
 
     }

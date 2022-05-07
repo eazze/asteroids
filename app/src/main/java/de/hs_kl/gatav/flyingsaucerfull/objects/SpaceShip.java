@@ -11,7 +11,7 @@ public class SpaceShip extends SpaceObject {
 
     private static float FULL_HEALTH=1.0f;
 
-    private float rotation = 0.0f;
+    private float rotation = 90f;
     private boolean dir;
     private float rotateSpeed = 10f;
     private boolean rotateShip = false;
@@ -502,7 +502,9 @@ public class SpaceShip extends SpaceObject {
             } else {
                 if(rotation == -360f || rotation < -360f) rotation = 0;
                 rotation -= fracSec * angularVelocity * deathRotationVelocity * rotateSpeed;
-                ringRotation -= fracSec * angularVelocity * deathRotationVelocity * rotateSpeed; }
+                ringRotation -= fracSec * angularVelocity * deathRotationVelocity * rotateSpeed; }}
+
+        //NICHT KLAMMERN!!!
         updatePosition(fracSec);
 
         /*if(ringHealth<=0.2) deathRotationVelocity=20.0f;
@@ -513,7 +515,7 @@ public class SpaceShip extends SpaceObject {
 
 
 
-    }}
+    }
 
     public float getRotationShip() {
         return rotation;
