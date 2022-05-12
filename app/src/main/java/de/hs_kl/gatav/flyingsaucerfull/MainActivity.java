@@ -145,18 +145,18 @@ public class MainActivity extends Activity  {
 
     private void accelerateStop() {
         float vecDir[] = spaceGLSurfaceView.getShipViewDirection();
-        float startZeit = (float) System.currentTimeMillis();
+        long startZeit = System.currentTimeMillis();
         /*for(float i = 5f; i > 0; i -= 0.5f) {
             spaceGLSurfaceView.setShipVelocity(vecDir[0]*i, vecDir[1], vecDir[2]*i);
             SystemClock.sleep(30);
         }*/
-        float i = 5f;
-        /*while(((float) System.currentTimeMillis() - startZeit) < 250f) {
+        float i = 10f;
+        while((System.currentTimeMillis() - startZeit) < 500) {
             Log.d("Time: ", "" + (System.currentTimeMillis() - startZeit));
             spaceGLSurfaceView.setShipVelocity(vecDir[0]*i, vecDir[1], vecDir[2]*i);
             if(i > 0.5f) i -= 0.5f;
 
-        }*/
+        }
         spaceGLSurfaceView.setShipVelocity(0, 0, 0);
 
     }
