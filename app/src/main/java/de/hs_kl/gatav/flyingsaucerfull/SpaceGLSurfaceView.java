@@ -4,7 +4,9 @@ package de.hs_kl.gatav.flyingsaucerfull;
 
 import static de.hs_kl.gatav.flyingsaucerfull.util.Utilities.normalize;
 
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -33,6 +35,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
     private static final float minSpawnDistanceBetweenObstacles = 1.5f;
     private static final float asteroidMinScale = 0.8f;
     private static final float asteroidMaxScale = 1.0f;
+    private GL10 glm;
 
     private float[] dirVec = {0f, 0f, 1f};
 
@@ -89,6 +92,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             long delta = System.currentTimeMillis() - lastFrameTime;
             float fracSec = (float) delta / 1000;
             lastFrameTime = System.currentTimeMillis();
+            glm = gl;
 
             // scene updates
             updateShip(fracSec);
@@ -435,6 +439,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             gl.glDisable(GL10.GL_DITHER);
             gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_FASTEST);
 
+
             gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             gl.glEnable(GL10.GL_CULL_FACE);
             gl.glShadeModel(GL10.GL_FLAT);
@@ -459,18 +464,65 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
     }
 
     public float[] getShipViewDirection() {
+        /*float[] matrix = new float[16];
+
+        ((GL11)glm).glGetFloatv(GL11.GL_MODELVIEW_MATRIX, FloatBuffer.wrap(matrix));
+
+        float[] DOF = new float[3];
+        DOF[0] = matrix[2]; // x
+        DOF[1] = matrix[6]; // y
+        DOF[2] = matrix[10]; // z
+        Log.d("Matrix", Arrays.toString(DOF));*//*
+
 
         Log.d("rotation", " " + ship.getRotationShip());
         float shipRotation = ship.getRotationShip();
         if (shipRotation < 0f) shipRotation = 360f + shipRotation;
         if (shipRotation > 359f) {
-            shipRotation = 0;
+            shipRotation = 1;
         }
         if (shipRotation > 0) {
             Log.d("Rotation: ", " " + shipRotation);
-            dirVec[0] = dirVec[0] * (float) Math.cos((double) shipRotation) - dirVec[2] * (float) Math.sin((double) shipRotation);
-            dirVec[2] = dirVec[0] * (float) Math.sin((double) shipRotation) + dirVec[2] * (float) Math.cos((double) shipRotation);
+            dirVec[0] = ((int)((dirVec[0] * (float) Math.cos((double) shipRotation) - dirVec[2] * (float) Math.sin((double) shipRotation))*10))/10F;
+            dirVec[2] = ((int)((dirVec[0] * (float) Math.sin((double) shipRotation) + dirVec[2] * (float) Math.cos((double) shipRotation))*10))/10F;
             normalize(dirVec);
+            Log.d("X: ", " "+ dirVec[0]);
+            Log.d("Y: ", " "+ dirVec[2]);
+            Log.d("Test: ", " " + ((int)( 0.88f)*100)/10f);
+        }*/
+
+        float shipRotation = ship.getRotationShip();
+        if (shipRotation < 0f) shipRotation = 360f + shipRotation;
+        if (shipRotation > 359f) {
+            shipRotation = 1;
+        }
+        Log.d("ShipRotation: ",shipRotation+"");
+
+        if(shipRotation>=0f&&shipRotation<=90f){
+            dirVec[2] = (float)(shipRotation/90);
+            dirVec[1] = 0f;
+            dirVec[0] = (float)((90-shipRotation)/90)*-1;
+        }else if(shipRotation>90f&&shipRotation<=180f){
+
+            dirVec[0] = (float)((shipRotation-90)/90);
+            dirVec[1] = 0f;
+            dirVec[2] = (float)((90-(shipRotation-90))/90);
+        }
+        else if(shipRotation>180f&&shipRotation<=270f){
+            dirVec[2] = (float)((shipRotation-180)/90)*-1;
+            dirVec[1] = 0f;
+            dirVec[0] = (float)((90-(shipRotation-180))/90);
+        }
+        else if(shipRotation>270f&&shipRotation<=359.9f){
+            dirVec[0] = (float)((shipRotation-270)/90)*-1;
+            dirVec[1] = 0f;
+            dirVec[2] = (float)((90-(shipRotation-270))/90)*-1;
+        }
+        /*
+        */
+        normalize(dirVec);
+        Log.d("X: ", " "+ dirVec[0]);
+        Log.d("Y: ", " "+ dirVec[2]);
             /*float m = (float) Math.sqrt((double) (dirVec[0] * dirVec[0] + dirVec[2] * dirVec[2]));
             dirVec[0] /= m;
             dirVec[2] /= m;
@@ -504,9 +556,9 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
         }*/
 
         /*dirVec[2] = (float) Math.cos((double) shipRotation);
-        dirVec[0] = -(float) Math.sin((double) shipRotation);*/
+        dirVec[0] = -(float) Math.sin((double) shipRotation);}*/
 
-        }
+
             return dirVec;
         }
 

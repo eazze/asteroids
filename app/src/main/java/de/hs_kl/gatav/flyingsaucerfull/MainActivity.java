@@ -7,6 +7,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -136,18 +137,25 @@ public class MainActivity extends Activity  {
 
     private void accelerateTouch() {
         float vecDir[] = spaceGLSurfaceView.getShipViewDirection();
-        spaceGLSurfaceView.setShipVelocity(vecDir[0]*10f, 0, vecDir[2]*10f);
-        /*for(float i = 1; i < 5; i += 1) {
-            spaceGLSurfaceView.setShipVelocity(vecDir[0]*i, 0, vecDir[2]*i);
-        }*/
+
+        for(float i = 1; i < 5; i += 0.5f) {
+            spaceGLSurfaceView.setShipVelocity(vecDir[0]*10f, 0, vecDir[2]*10f);
+        }
     }
 
     private void accelerateStop() {
-        //float vecDir[] = spaceGLSurfaceView.getShipViewDirection();
-        //spaceGLSurfaceView.setShipVelocity(vecDir[0], 0, vecDir[2]);
-        /*for(float i = 2f; i > 0; i -= 0.5f) {
+        float vecDir[] = spaceGLSurfaceView.getShipViewDirection();
+        float startZeit = (float) System.currentTimeMillis();
+        /*for(float i = 5f; i > 0; i -= 0.5f) {
             spaceGLSurfaceView.setShipVelocity(vecDir[0]*i, vecDir[1], vecDir[2]*i);
-            SystemClock.sleep(120);
+            SystemClock.sleep(30);
+        }*/
+        float i = 5f;
+        /*while(((float) System.currentTimeMillis() - startZeit) < 250f) {
+            Log.d("Time: ", "" + (System.currentTimeMillis() - startZeit));
+            spaceGLSurfaceView.setShipVelocity(vecDir[0]*i, vecDir[1], vecDir[2]*i);
+            if(i > 0.5f) i -= 0.5f;
+
         }*/
         spaceGLSurfaceView.setShipVelocity(0, 0, 0);
 
