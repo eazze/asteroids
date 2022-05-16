@@ -63,19 +63,17 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
         ship.setVelocity(vx, vy, vz);
     }
 
-    public void setShotVelocity(float vx, float vy, float vz, Shot shot) { shot.setVelocity(vx, vy, vz);}
-
     public void spawnNewShot() {
-
-        float scale = 1.0f;
+        float[] shotDir = getShipViewDirection();
+        float scale = 0.2f;
 
         float spawnX = ship.getX();
         float spawnZ = ship.getZ();
         float spawnOffset = scale * 0.5f;
         float velocity[] = new float[3];
 
-        velocity[0] = spawnX;
-        velocity[2] = spawnZ;
+        velocity[0] = spawnX + spawnOffset;
+        velocity[2] = spawnZ + spawnOffset;
         normalize(velocity);
 
         Shot newShot = new Shot();
@@ -83,6 +81,10 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
         newShot.velocity = velocity;
         newShot.setPosition(spawnX, 0, spawnZ);
         shotArray.add(newShot);
+
+        newShot.setVelocity(shotDir[0]*20f, shotDir[1], shotDir[2]*20f);
+
+        Log.d("Shot array: ", "" + shotArray.isEmpty());
 
 
     }
@@ -209,15 +211,6 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
                 starship.setVelocity(v[0], 0.0f, v[1]);
             }*/
         }
-
-        public void spawnShot() {
-
-
-
-
-
-        }
-
 
         private void updateShip(float fracSec) {
             ship.update(fracSec);
@@ -523,11 +516,11 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
 
             // window boundaries
             // z range is the desired height
-            boundaryTop = desired_height / 2;
-            boundaryBottom = -desired_height / 2;
+            boundaryTop = desired_height / 1.5f;
+            boundaryBottom = -desired_height / 1.5f;
             // x range is the desired width
-            boundaryLeft = -(desired_height / 2 * aspectRatio);
-            boundaryRight = (desired_height / 2 * aspectRatio);
+            boundaryLeft = -(desired_height / 1.7f * aspectRatio);
+            boundaryRight = (desired_height / 1.7f * aspectRatio);
         }
 
         @Override
@@ -592,7 +585,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
         if (shipRotation > 359f) {
             shipRotation = 1;
         }
-        Log.d("ShipRotation: ", shipRotation + "");
+        //Log.d("ShipRotation: ", shipRotation + "");
 
         if (shipRotation >= 0f && shipRotation <= 90f) {
             dirVec[2] = (float) (shipRotation / 90);
@@ -615,8 +608,8 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
         /*
          */
         normalize(dirVec);
-        Log.d("X: ", " " + dirVec[0]);
-        Log.d("Y: ", " " + dirVec[2]);
+        //Log.d("X: ", " " + dirVec[0]);
+        //Log.d("Y: ", " " + dirVec[2]);
             /*float m = (float) Math.sqrt((double) (dirVec[0] * dirVec[0] + dirVec[2] * dirVec[2]));
             dirVec[0] /= m;
             dirVec[2] /= m;

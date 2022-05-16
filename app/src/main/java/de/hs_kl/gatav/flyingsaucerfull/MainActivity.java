@@ -98,18 +98,12 @@ public class MainActivity extends Activity {
         });
 
         Button buttonControlShot = (Button)findViewById(R.id.controlShot);
-        buttonControlShot.setOnTouchListener(new View.OnTouchListener() {
+        buttonControlShot.setOnClickListener(new View.OnClickListener() {
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                Log.d("spawnNewShot", "1");
+            public void onClick(View v) {
                 spaceGLSurfaceView.spawnNewShot();
-                if (event.getAction() == MotionEvent.ACTION_UP) {
-                    buttonControlShot.setPressed(!buttonControlShot.isPressed());
-                    // Do what you want
-                    return true;
-                }
-                return false;
             }
+
         });
 /*
         Button buttonControlMenu = (Button) findViewById(R.id.controlMenu);
@@ -161,9 +155,9 @@ public class MainActivity extends Activity {
         }*/
         float i = 10f;
         while ((System.currentTimeMillis() - startZeit) < 500) {
-            Log.d("Time: ", "" + (System.currentTimeMillis() - startZeit));
+            //Log.d("Time: ", "" + (System.currentTimeMillis() - startZeit));
             spaceGLSurfaceView.setShipVelocity(vecDir[0] * i, vecDir[1], vecDir[2] * i);
-            if (i > 0.5f) i -= 0.5f;
+            if (i > 1) i -= 1f;
 
         }
         spaceGLSurfaceView.setShipVelocity(0, 0, 0);
