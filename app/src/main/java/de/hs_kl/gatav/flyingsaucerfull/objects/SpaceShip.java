@@ -9,30 +9,6 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class SpaceShip extends SpaceObject {
 
-    private static float FULL_HEALTH=1.0f;
-
-    private float rotation = 90f;
-    private boolean dir;
-    private float rotateSpeed = 10f;
-    private boolean rotateShip = false;
-    private float angularVelocity = 10.0f;
-    private float deathRotationVelocity = 1.0f;
-
-    private float ringRotation = 0.0f;
-    private float ringAngularVelocity = -30.0f;
-
-    private float ringHealth = FULL_HEALTH; // 1.0 = full, 0.0 = dead, <0.2 = blinking <=0.1 = death rotation
-
-    private static float[] colorEnergyHigh = { 0.0f, 1.0f, 0.0f };
-    private static float[] colorEnergyMedium = { 1.0f, 0.5f, 0.0f };
-    private static float[] colorEnergyLow = { 1.0f, 0.0f, 0.0f };
-
-    private static float[] colorBody = { 0.8f, 0.8f, 0.8f };
-
-    public float getRingHealth() {
-        return ringHealth;
-    }
-
     //@formatter:off
     private static final float ring_vertices[] = {
             -0.230970f, 0.065390f, 0.000000f/*,
@@ -134,7 +110,6 @@ public class SpaceShip extends SpaceObject {
             15-1, 13-1, 10-1, 12-1,
             18-1, 16-1, 13-1, 15-1*/
     };
-
     private static final float body_vertices[] = {
             -0.095671f, 0.182819f, 0.000000f,
             -0.176777f, 0.139924f, 0.000000f,
@@ -351,15 +326,27 @@ public class SpaceShip extends SpaceObject {
             54-49, 98-49, 146-49,
             85-49, 49-49, 141-49
     };
+    private static float FULL_HEALTH=1.0f;
+    private static float[] colorEnergyHigh = { 0.0f, 1.0f, 0.0f };
+    private static float[] colorEnergyMedium = { 1.0f, 0.5f, 0.0f };
+    private static float[] colorEnergyLow = { 1.0f, 0.0f, 0.0f };
+    private static float[] colorBody = { 0.8f, 0.8f, 0.8f };
     //@formatter:on
     private static FloatBuffer ringVerticesBuffer;
     private static ShortBuffer ringQuadsBuffer;
-
     private static FloatBuffer bodyVerticesBuffer;
     private static ShortBuffer bodyQuadsBuffer;
     private static ShortBuffer bodyTrianglesBuffer;
-
     private static boolean buffersInitialized = false;
+    private float rotation = 90f;
+    private boolean dir;
+    private float rotateSpeed = 10f;
+    private boolean rotateShip = false;
+    private float angularVelocity = 10.0f;
+    private float deathRotationVelocity = 1.0f;
+    private float ringRotation = 0.0f;
+    private float ringAngularVelocity = -30.0f;
+    private float ringHealth = FULL_HEALTH; // 1.0 = full, 0.0 = dead, <0.2 = blinking <=0.1 = death rotation
 
     public SpaceShip() {
         // set default scale to 2
@@ -399,6 +386,10 @@ public class SpaceShip extends SpaceObject {
 
             buffersInitialized = true;
         }
+    }
+
+    public float getRingHealth() {
+        return ringHealth;
     }
 
     public void damage(float dmg) {

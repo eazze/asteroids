@@ -21,6 +21,7 @@ import android.widget.Toast;
 import de.hs_kl.gatav.flyingsaucerfull.objects.Asteroid;
 import de.hs_kl.gatav.flyingsaucerfull.objects.BorgCube;
 import de.hs_kl.gatav.flyingsaucerfull.objects.Obstacle;
+import de.hs_kl.gatav.flyingsaucerfull.objects.Shot;
 import de.hs_kl.gatav.flyingsaucerfull.objects.SpaceObject;
 import de.hs_kl.gatav.flyingsaucerfull.objects.SpaceShip;
 import de.hs_kl.gatav.flyingsaucerfull.objects.Starship;
@@ -30,7 +31,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
     private SpaceRenderer renderer;
     public Context context;  // activity context
 
-    private static final int obstacleCount = 15;
+    private static final int obstacleCount = 3;
     private static final float minSpawnDistanceToPlayer = 1.5f;
     private static final float minSpawnDistanceBetweenObstacles = 1.5f;
     private static final float asteroidMinScale = 0.8f;
@@ -43,6 +44,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
     private ArrayList<Obstacle> obstacles = new ArrayList<Obstacle>();
     private SpaceShip ship = new SpaceShip();
     private Starship starship = new Starship();
+    private ArrayList<Shot> shotArray = new ArrayList<Shot>();
 
     {
         obstacles.add(starship);
@@ -98,6 +100,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             updateShip(fracSec);
 
             updateObstacles(fracSec);
+            updateShot(fracSec);
 
 
             // clear screen and depth buffer
@@ -115,18 +118,21 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             }
         }
 
+        private void updateShot(float fracSec) {
+        }
+
 
         private void updateShip(float fracSec) {
             ship.update(fracSec);
             // keep ship within window boundaries
             if (ship.getX() < boundaryLeft + ship.scale / 2)
-                ship.setX(boundaryLeft + ship.scale / 2);
-            if (ship.getX() > boundaryRight - ship.scale / 2)
                 ship.setX(boundaryRight - ship.scale / 2);
+            if (ship.getX() > boundaryRight - ship.scale / 2)
+                ship.setX(boundaryLeft + ship.scale / 2);
             if (ship.getZ() < boundaryBottom + ship.scale / 2)
-                ship.setZ(boundaryBottom + ship.scale / 2);
-            if (ship.getZ() > boundaryTop - ship.scale / 2)
                 ship.setZ(boundaryTop - ship.scale / 2);
+            if (ship.getZ() > boundaryTop - ship.scale / 2)
+                ship.setZ(boundaryBottom + ship.scale / 2);
         }
 
 
