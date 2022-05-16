@@ -1,7 +1,6 @@
 package de.hs_kl.gatav.flyingsaucerfull;
 
 
-
 import static de.hs_kl.gatav.flyingsaucerfull.util.Utilities.normalize;
 
 import java.nio.FloatBuffer;
@@ -18,6 +17,7 @@ import android.opengl.GLU;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.Toast;
+
 import de.hs_kl.gatav.flyingsaucerfull.objects.Asteroid;
 import de.hs_kl.gatav.flyingsaucerfull.objects.BorgCube;
 import de.hs_kl.gatav.flyingsaucerfull.objects.Obstacle;
@@ -63,6 +63,30 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
         ship.setVelocity(vx, vy, vz);
     }
 
+    public void setShotVelocity(float vx, float vy, float vz, Shot shot) { shot.setVelocity(vx, vy, vz);}
+
+    public void spawnNewShot() {
+
+        float scale = 1.0f;
+
+        float spawnX = ship.getX();
+        float spawnZ = ship.getZ();
+        float spawnOffset = scale * 0.5f;
+        float velocity[] = new float[3];
+
+        velocity[0] = spawnX;
+        velocity[2] = spawnZ;
+        normalize(velocity);
+
+        Shot newShot = new Shot();
+        newShot.scale = scale;
+        newShot.velocity = velocity;
+        newShot.setPosition(spawnX, 0, spawnZ);
+        shotArray.add(newShot);
+
+
+    }
+
     // enable support from starship enterprise
     /*@Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -98,7 +122,6 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
 
             // scene updates
             updateShip(fracSec);
-
             updateObstacles(fracSec);
             updateShot(fracSec);
 
@@ -116,9 +139,83 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             for (Obstacle obstacle : obstacles) {
                 obstacle.draw(gl);
             }
+            for(Shot shot : shotArray) {
+                shot.draw(gl);
+            }
         }
 
         private void updateShot(float fracSec) {
+            ArrayList<Shot> shotsToBeRemoved = new ArrayList<Shot>();
+
+
+            // position update on all obstacles
+            for (Shot shot : shotArray) {
+                shot.update(fracSec);
+            }
+
+
+            // check for obstacles that flew out of the viewing area and remove
+            // or deactivate them
+            for (Shot shot : shotArray) {
+                // offset makes sure that the obstacles don't get deleted or set
+                // inactive while visible to the player.
+                float offset = shot.scale;
+
+                if ((shot.getX() > boundaryRight + offset)
+                        || (shot.getX() < boundaryLeft - offset)
+                        || (shot.getZ() > boundaryTop + offset)
+                        || (shot.getZ() < boundaryBottom - offset)) {
+
+                        shotsToBeRemoved.add(shot);
+            }}
+            // remove obsolete obstacles
+            for (Shot shot : shotsToBeRemoved) {
+                shotArray.remove(shot);
+            }
+                shotsToBeRemoved.clear();
+
+
+            // shot collision with asteroid
+            for (Obstacle obstacle : obstacles) {
+                for(Shot shot : shotArray) {
+                    if (areColliding(shot, obstacle)) {
+                         // add some damage to the ship
+                        shotsToBeRemoved.add(shot);
+                        //ODOT
+                    }
+                }
+
+            }
+            for (Shot shot : shotsToBeRemoved) {
+                shotArray.remove(shot);
+            }
+            shotsToBeRemoved.clear();
+/*
+            // check for reactivation of Starship enterprise
+            if (starship.enabled && starship.reActivate()) {
+                float x1, z1, x2, z2, v[] = new float[2];
+
+                x1 = boundaryLeft - starship.scale * 0.5f;
+                x2 = boundaryRight + starship.scale;
+                z1 = ((float) (Math.random()) < 0.5f ? -1f : 1f) * (float) (Math.random()) * boundaryTop * 1.5f;
+                z2 = ((float) (Math.random()) < 0.5f ? -1f : 1f) * (float) (Math.random()) * boundaryTop * 1.5f;
+                v[0] = x2 - x1;
+                v[1] = z2 - z1;
+                normalize(v);
+                v[0] *= 4;
+                v[1] *= 4;
+
+                starship.setPosition(x1, 0, z1);
+                starship.setVelocity(v[0], 0.0f, v[1]);
+            }*/
+        }
+
+        public void spawnShot() {
+
+
+
+
+
         }
 
 
@@ -186,15 +283,8 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             // obstacle collision with space ship
             for (Obstacle obstacle : obstacles) {
                 if (areColliding(ship, obstacle)) {
-                    if (obstacle instanceof Asteroid) {
-                        ship.damage(0.1f); // add some damage to the ship
+                        ship.damage(1f); // add some damage to the ship
                         obstaclesToBeRemoved.add(obstacle);
-                    }
-                    if (obstacle instanceof BorgCube) {
-                        ship.damage(0.2f); // add some more because the borg are
-                        // mighty!
-                        obstaclesToBeRemoved.add(obstacle);
-                    }
                     //ODOT
                 }
             }
@@ -375,7 +465,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
                     }
                 }
             }
-
+/*
             // check for reactivation of Starship enterprise
             if (starship.enabled && starship.reActivate()) {
                 float x1, z1, x2, z2, v[] = new float[2];
@@ -392,7 +482,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
 
                 starship.setPosition(x1, 0, z1);
                 starship.setVelocity(v[0], 0.0f, v[1]);
-            }
+            }*/
         }
 
 
@@ -502,33 +592,31 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
         if (shipRotation > 359f) {
             shipRotation = 1;
         }
-        Log.d("ShipRotation: ",shipRotation+"");
+        Log.d("ShipRotation: ", shipRotation + "");
 
-        if(shipRotation>=0f&&shipRotation<=90f){
-            dirVec[2] = (float)(shipRotation/90);
+        if (shipRotation >= 0f && shipRotation <= 90f) {
+            dirVec[2] = (float) (shipRotation / 90);
             dirVec[1] = 0f;
-            dirVec[0] = (float)((90-shipRotation)/90)*-1;
-        }else if(shipRotation>90f&&shipRotation<=180f){
+            dirVec[0] = (float) ((90 - shipRotation) / 90) * -1;
+        } else if (shipRotation > 90f && shipRotation <= 180f) {
 
-            dirVec[0] = (float)((shipRotation-90)/90);
+            dirVec[0] = (float) ((shipRotation - 90) / 90);
             dirVec[1] = 0f;
-            dirVec[2] = (float)((90-(shipRotation-90))/90);
-        }
-        else if(shipRotation>180f&&shipRotation<=270f){
-            dirVec[2] = (float)((shipRotation-180)/90)*-1;
+            dirVec[2] = (float) ((90 - (shipRotation - 90)) / 90);
+        } else if (shipRotation > 180f && shipRotation <= 270f) {
+            dirVec[2] = (float) ((shipRotation - 180) / 90) * -1;
             dirVec[1] = 0f;
-            dirVec[0] = (float)((90-(shipRotation-180))/90);
-        }
-        else if(shipRotation>270f&&shipRotation<=359.9f){
-            dirVec[0] = (float)((shipRotation-270)/90)*-1;
+            dirVec[0] = (float) ((90 - (shipRotation - 180)) / 90);
+        } else if (shipRotation > 270f && shipRotation <= 359.9f) {
+            dirVec[0] = (float) ((shipRotation - 270) / 90) * -1;
             dirVec[1] = 0f;
-            dirVec[2] = (float)((90-(shipRotation-270))/90)*-1;
+            dirVec[2] = (float) ((90 - (shipRotation - 270)) / 90) * -1;
         }
         /*
-        */
+         */
         normalize(dirVec);
-        Log.d("X: ", " "+ dirVec[0]);
-        Log.d("Y: ", " "+ dirVec[2]);
+        Log.d("X: ", " " + dirVec[0]);
+        Log.d("Y: ", " " + dirVec[2]);
             /*float m = (float) Math.sqrt((double) (dirVec[0] * dirVec[0] + dirVec[2] * dirVec[2]));
             dirVec[0] /= m;
             dirVec[2] /= m;
@@ -565,8 +653,8 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
         dirVec[0] = -(float) Math.sin((double) shipRotation);}*/
 
 
-            return dirVec;
-        }
+        return dirVec;
+    }
 
 
 }

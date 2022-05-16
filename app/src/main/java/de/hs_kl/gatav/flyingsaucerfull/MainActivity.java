@@ -18,7 +18,7 @@ import android.widget.Button;
 
 import de.hs_kl.gatav.flyingsaucerfull.objects.SpaceShip;
 
-public class MainActivity extends Activity  {
+public class MainActivity extends Activity {
 
     private SpaceGLSurfaceView spaceGLSurfaceView;
     private WindowManager mWindowManager;
@@ -30,25 +30,24 @@ public class MainActivity extends Activity  {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mWindowManager = (WindowManager)getSystemService(WINDOW_SERVICE);
+        mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
 
         mDisplay = mWindowManager.getDefaultDisplay();
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         spaceGLSurfaceView = new SpaceGLSurfaceView(this);
-        spaceGLSurfaceView.context=this;
+        spaceGLSurfaceView.context = this;
 
 
         setContentView(spaceGLSurfaceView);
-
 
 
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(this.LAYOUT_INFLATER_SERVICE);
         View ll = inflater.inflate(R.layout.surface_view_overlay, null);
         addContentView(ll, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
-        Button buttonControlThrust = (Button)findViewById(R.id.controlThrust);
+        Button buttonControlThrust = (Button) findViewById(R.id.controlThrust);
         // Register the onClick listener with the implementation above
         buttonControlThrust.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -56,9 +55,8 @@ public class MainActivity extends Activity  {
                 accelerateTouch();
 
 
-
-                if(event.getAction() == MotionEvent.ACTION_UP){
-                   accelerateStop();
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    accelerateStop();
                     buttonControlThrust.setPressed(!buttonControlThrust.isPressed());
 
                     // Do what you want
@@ -69,13 +67,12 @@ public class MainActivity extends Activity  {
         });
 
 
-
-        Button buttonControlLeft = (Button)findViewById(R.id.controlLeft);
+        Button buttonControlLeft = (Button) findViewById(R.id.controlLeft);
         buttonControlLeft.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 spaceGLSurfaceView.setRotationShip(false);
-                if(event.getAction() == MotionEvent.ACTION_UP){
+                if (event.getAction() == MotionEvent.ACTION_UP) {
                     spaceGLSurfaceView.stopRotationShip();
                     buttonControlLeft.setPressed(!buttonControlLeft.isPressed());
                     // Do what you want
@@ -85,12 +82,12 @@ public class MainActivity extends Activity  {
             }
         });
 
-        Button buttonControlRight = (Button)findViewById(R.id.controlRight);
+        Button buttonControlRight = (Button) findViewById(R.id.controlRight);
         buttonControlRight.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 spaceGLSurfaceView.setRotationShip(true);
-                if(event.getAction() == MotionEvent.ACTION_UP){
+                if (event.getAction() == MotionEvent.ACTION_UP) {
                     spaceGLSurfaceView.stopRotationShip();
                     buttonControlRight.setPressed(!buttonControlRight.isPressed());
                     // Do what you want
@@ -98,13 +95,25 @@ public class MainActivity extends Activity  {
                 }
                 return false;
             }
-        });/*
+        });
 
         Button buttonControlShot = (Button)findViewById(R.id.controlShot);
-        buttonControlShot.setOnTouchListener(controlShot);*/
-
-        Button buttonControlMenu = (Button)findViewById(R.id.controlMenu);
-        buttonControlMenu.setOnClickListener(controlMenu);
+        buttonControlShot.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                Log.d("spawnNewShot", "1");
+                spaceGLSurfaceView.spawnNewShot();
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    buttonControlShot.setPressed(!buttonControlShot.isPressed());
+                    // Do what you want
+                    return true;
+                }
+                return false;
+            }
+        });
+/*
+        Button buttonControlMenu = (Button) findViewById(R.id.controlMenu);
+        buttonControlMenu.setOnClickListener(controlMenu);*/
 
 
         //addContentView(gameWidgets, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -138,8 +147,8 @@ public class MainActivity extends Activity  {
     private void accelerateTouch() {
         float vecDir[] = spaceGLSurfaceView.getShipViewDirection();
 
-        for(float i = 1; i < 5; i += 0.5f) {
-            spaceGLSurfaceView.setShipVelocity(vecDir[0]*10f, 0, vecDir[2]*10f);
+        for (float i = 1; i < 5; i += 0.5f) {
+            spaceGLSurfaceView.setShipVelocity(vecDir[0] * 10f, 0, vecDir[2] * 10f);
         }
     }
 
@@ -151,10 +160,10 @@ public class MainActivity extends Activity  {
             SystemClock.sleep(30);
         }*/
         float i = 10f;
-        while((System.currentTimeMillis() - startZeit) < 500) {
+        while ((System.currentTimeMillis() - startZeit) < 500) {
             Log.d("Time: ", "" + (System.currentTimeMillis() - startZeit));
-            spaceGLSurfaceView.setShipVelocity(vecDir[0]*i, vecDir[1], vecDir[2]*i);
-            if(i > 0.5f) i -= 0.5f;
+            spaceGLSurfaceView.setShipVelocity(vecDir[0] * i, vecDir[1], vecDir[2] * i);
+            if (i > 0.5f) i -= 0.5f;
 
         }
         spaceGLSurfaceView.setShipVelocity(0, 0, 0);
@@ -178,6 +187,7 @@ public class MainActivity extends Activity  {
 
         return height;
     }
+
     private int getScreenWidth(Context context) {
         int width;
 
