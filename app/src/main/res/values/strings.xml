@@ -8,4 +8,9 @@
     <string name="shotControl">Shot</string>
     <string name="menuControl">Menu</string>
     <string name="rightControl">right</string>
+    <string name="gameName">Best Asteroids Ever</string>
+    <string name="changeSkin">Change Skin</string>
+    <string name="highScore">High Score</string>
+    <string name="about">About</string>
+    <string name="play">Play</string>
 </resources>

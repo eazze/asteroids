@@ -25,24 +25,29 @@ public class MainActivity extends Activity {
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
     private Display mDisplay;
+    private boolean menu = true;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void changeScreen() {
+        Log.d("Menu: ", menu + "");
 
-        mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        if(!menu) {
 
-        mDisplay = mWindowManager.getDefaultDisplay();
+            setContentView(R.layout.menu_start);
 
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            Button play = (Button)findViewById(R.id.play);
+            play.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    changeScreen();
+                }
+
+            });
+
+        } else {
 
         spaceGLSurfaceView = new SpaceGLSurfaceView(this);
         spaceGLSurfaceView.context = this;
-
-
         setContentView(spaceGLSurfaceView);
-
-
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(this.LAYOUT_INFLATER_SERVICE);
         View ll = inflater.inflate(R.layout.surface_view_overlay, null);
         addContentView(ll, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -105,10 +110,40 @@ public class MainActivity extends Activity {
             }
 
         });
-/*
-        Button buttonControlMenu = (Button) findViewById(R.id.controlMenu);
-        buttonControlMenu.setOnClickListener(controlMenu);*/
 
+        Button buttonControlMenu = (Button) findViewById(R.id.controlMenu);
+        buttonControlMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                changeScreen();
+            }
+
+        });
+
+    }
+        menu = !menu;
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        mWindowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+
+        mDisplay = mWindowManager.getDefaultDisplay();
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        setContentView(R.layout.menu_start);
+
+        Button play = (Button)findViewById(R.id.play);
+        play.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                changeScreen();
+            }
+
+        });
 
         //addContentView(gameWidgets, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
     }
@@ -124,18 +159,6 @@ public class MainActivity extends Activity {
         super.onPause();
         //mSensorManager.unregisterListener(this);
     }
-
-    private View.OnClickListener controlMenu = new View.OnClickListener() {
-        public void onClick(View v) {
-            //Log.d("Thrust", "1");
-        }
-    };
-    /*
-    private View.OnClickListener controlThrust = new View.OnClickListener() {
-        public void onClick(View v) {
-            //Log.d("Thrust", "1");
-        }
-    };*/
 
 
     private void accelerateTouch() {
@@ -162,42 +185,6 @@ public class MainActivity extends Activity {
         }
         spaceGLSurfaceView.setShipVelocity(0, 0, 0);
 
-    }
-
-    private int getScreenHeight(Context context) {
-        int height;
-
-        if (android.os.Build.VERSION.SDK_INT >= 13) {
-            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            Display display = wm.getDefaultDisplay();
-            Point size = new Point();
-            display.getSize(size);
-            height = size.y;
-        } else {
-            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            Display display = wm.getDefaultDisplay();
-            height = display.getHeight();  // deprecated
-        }
-
-        return height;
-    }
-
-    private int getScreenWidth(Context context) {
-        int width;
-
-        if (android.os.Build.VERSION.SDK_INT >= 13) {
-            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            Display display = wm.getDefaultDisplay();
-            Point size = new Point();
-            display.getSize(size);
-            width = size.x;
-        } else {
-            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-            Display display = wm.getDefaultDisplay();
-            width = display.getWidth();  // deprecated
-        }
-
-        return width;
     }
 
 }
