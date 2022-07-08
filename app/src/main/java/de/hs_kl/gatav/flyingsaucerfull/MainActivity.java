@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Point;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
@@ -15,6 +16,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
+
+import androidx.annotation.RequiresApi;
+
+import java.io.IOException;
 
 import de.hs_kl.gatav.flyingsaucerfull.objects.SpaceShip;
 
@@ -27,7 +32,8 @@ public class MainActivity extends Activity {
     private Display mDisplay;
     private boolean menu = true;
 
-    public void changeScreen() {
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void changeScreen() throws IOException {
         Log.d("Menu: ", menu + "");
 
         if(!menu) {
@@ -38,7 +44,11 @@ public class MainActivity extends Activity {
             play.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    changeScreen();
+                    try {
+                        changeScreen();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
 
             });
@@ -74,6 +84,7 @@ public class MainActivity extends Activity {
 
         Button buttonControlLeft = (Button) findViewById(R.id.controlLeft);
         buttonControlLeft.setOnTouchListener(new View.OnTouchListener() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 spaceGLSurfaceView.setRotationShip(false);
@@ -89,6 +100,7 @@ public class MainActivity extends Activity {
 
         Button buttonControlRight = (Button) findViewById(R.id.controlRight);
         buttonControlRight.setOnTouchListener(new View.OnTouchListener() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 spaceGLSurfaceView.setRotationShip(true);
@@ -115,7 +127,11 @@ public class MainActivity extends Activity {
         buttonControlMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                changeScreen();
+                try {
+                    changeScreen();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
         });
@@ -138,9 +154,14 @@ public class MainActivity extends Activity {
 
         Button play = (Button)findViewById(R.id.play);
         play.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View v) {
-                changeScreen();
+                try {
+                    changeScreen();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
         });

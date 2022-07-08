@@ -3,7 +3,11 @@ package de.hs_kl.gatav.flyingsaucerfull;
 
 import static de.hs_kl.gatav.flyingsaucerfull.util.Utilities.normalize;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.FloatBuffer;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -12,11 +16,15 @@ import javax.microedition.khronos.opengles.GL10;
 import javax.microedition.khronos.opengles.GL11;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
+import android.os.Build;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.Toast;
+
+import androidx.annotation.RequiresApi;
 
 import de.hs_kl.gatav.flyingsaucerfull.objects.Asteroid;
 import de.hs_kl.gatav.flyingsaucerfull.objects.BorgCube;
@@ -25,24 +33,27 @@ import de.hs_kl.gatav.flyingsaucerfull.objects.Shot;
 import de.hs_kl.gatav.flyingsaucerfull.objects.SpaceObject;
 import de.hs_kl.gatav.flyingsaucerfull.objects.SpaceShip;
 import de.hs_kl.gatav.flyingsaucerfull.objects.Starship;
+import de.hs_kl.gatav.flyingsaucerfull.util.MeshObjectLoader;
 
+@RequiresApi(api = Build.VERSION_CODES.O)
 public class SpaceGLSurfaceView extends GLSurfaceView {
-
     private SpaceRenderer renderer;
-    public Context context;  // activity context
+    public Context context;
 
-    private static final int obstacleCount = 3;
+    private static final int obstacleCount = 6;
     private static final float minSpawnDistanceToPlayer = 1.5f;
     private static final float minSpawnDistanceBetweenObstacles = 1.5f;
-    private static final float asteroidMinScale = 0.8f;
+    private static final float asteroidMinScale = 0.2f;
     private static final float asteroidMaxScale = 1.0f;
     private GL10 glm;
 
     private float[] dirVec = {0f, 0f, 1f};
 
+    long lastShot = 0;
+
 
     private ArrayList<Obstacle> obstacles = new ArrayList<Obstacle>();
-    private SpaceShip ship = new SpaceShip();
+    private SpaceShip ship = new SpaceShip(getResourceShipModel());
     private Starship starship = new Starship();
     private ArrayList<Shot> shotArray = new ArrayList<Shot>();
 
@@ -50,12 +61,22 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
         obstacles.add(starship);
     }
 
-    public SpaceGLSurfaceView(Context context) {
+    public SpaceGLSurfaceView(Context context) throws IOException {
         super(context);
         renderer = new SpaceRenderer();
         setRenderer(renderer);
 
         setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+    }
+
+    private InputStream getResourceShipModel() {
+        AssetManager am = getContext().getAssets();
+        try {
+            return am.open("rd1.obj");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     // called from sensor
@@ -64,28 +85,52 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
     }
 
     public void spawnNewShot() {
-        float[] shotDir = getShipViewDirection();
-        float scale = 0.2f;
+        if(System.currentTimeMillis() - lastShot  > 150) {
+            float[] shotDir = getShipViewDirection();
+            float scale = 0.2f;
 
-        float spawnX = ship.getX();
-        float spawnZ = ship.getZ();
-        float spawnOffset = scale * 0.5f;
-        float velocity[] = new float[3];
+            float spawnX = ship.getX();
+            float spawnZ = ship.getZ();
+            float spawnOffset = scale * 0.5f;
+            float velocity[] = new float[3];
 
-        velocity[0] = spawnX + spawnOffset;
-        velocity[2] = spawnZ + spawnOffset;
-        normalize(velocity);
+            velocity[0] = spawnX + spawnOffset;
+            velocity[2] = spawnZ + spawnOffset;
+            normalize(velocity);
 
-        Shot newShot = new Shot();
-        newShot.scale = scale;
-        newShot.velocity = velocity;
-        newShot.setPosition(spawnX, 0, spawnZ);
-        shotArray.add(newShot);
+            Shot newShot = new Shot();
+            newShot.scale = scale;
+            newShot.velocity = velocity;
+            newShot.setPosition(spawnX, 0, spawnZ);
+            shotArray.add(newShot);
 
-        newShot.setVelocity(shotDir[0]*20f, shotDir[1], shotDir[2]*20f);
+            newShot.setVelocity(shotDir[0] * 20f, shotDir[1], shotDir[2] * 20f);
 
-        Log.d("Shot array: ", "" + shotArray.isEmpty());
+            Log.d("Shot array: ", "" + shotArray.isEmpty());
+            lastShot = System.currentTimeMillis();
+        }
 
+    }
+
+    private void breakAsteroid(Obstacle obstacle) {
+        if(obstacle.scale > 0.25f) {
+            Log.d("Scale", obstacle.scale/2 + "");
+            Asteroid newAsteroid1 = new Asteroid();
+            Asteroid newAsteroid2 = new Asteroid();
+            newAsteroid1.scale = obstacle.scale/2;
+            newAsteroid2.scale = obstacle.scale/2;
+            newAsteroid1.randomizeRotationAxis();
+            newAsteroid2.randomizeRotationAxis();
+            newAsteroid1.angularVelocity = 50;
+            newAsteroid2.angularVelocity = 50;
+            newAsteroid1.setPosition(obstacle.getX(), 0, obstacle.getZ());
+            newAsteroid2.setPosition(obstacle.getX(), 0, obstacle.getZ());
+            newAsteroid1.velocity = obstacle.velocity;
+            newAsteroid2.velocity = obstacle.velocity;
+            obstacles.add(newAsteroid1);
+            obstacles.add(newAsteroid2);
+            obstacles.remove(obstacle);
+        }
 
     }
 
@@ -138,12 +183,24 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             gl11.glLoadMatrixf(modelViewScene, 0);
 
             ship.draw(gl);
-            for (Obstacle obstacle : obstacles) {
+            ArrayList<Obstacle> obstacleCopies = new ArrayList<>();
+            for(Obstacle obstacle : obstacles) {
+                obstacleCopies.add(obstacle);
+            }
+            for (Obstacle obstacle : obstacleCopies) {
                 obstacle.draw(gl);
             }
+            obstacleCopies.clear();
+
+            ArrayList<Shot> shotCopies = new ArrayList<>();
             for(Shot shot : shotArray) {
-                shot.draw(gl);
+                shotCopies.add(shot);
             }
+            for(Shot shot : shotCopies) {
+                shot.draw(gl);
+                Log.d("Shot:", shot.hashCode() + "");
+            }
+            shotCopies.clear();
         }
 
         private void updateShot(float fracSec) {
@@ -178,16 +235,23 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
 
 
             // shot collision with asteroid
-            for (Obstacle obstacle : obstacles) {
-                for(Shot shot : shotArray) {
+            ArrayList<Obstacle> obstaclesCopy = new ArrayList<>();
+            for(Obstacle obstacle : obstacles) {
+                obstaclesCopy.add(obstacle);
+            }
+            for(Shot shot : shotArray) {
+            for (Obstacle obstacle : obstaclesCopy) {
                     if (areColliding(shot, obstacle)) {
-                         // add some damage to the ship
+
+                        Log.d("Attach", "Hit");
                         shotsToBeRemoved.add(shot);
+                        breakAsteroid(obstacle);
                         //ODOT
                     }
                 }
 
             }
+            obstaclesCopy.clear();
             for (Shot shot : shotsToBeRemoved) {
                 shotArray.remove(shot);
             }
@@ -212,6 +276,8 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             }*/
         }
 
+
+
         private void updateShip(float fracSec) {
             ship.update(fracSec);
             // keep ship within window boundaries
@@ -234,8 +300,10 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             float squaredHitDistance = ((obj1.scale + obj2.scale) / 2) * ((obj1.scale + obj2.scale) / 2);
             float squaredDistance = (obj1X - obj2X) * (obj1X - obj2X) + (obj1Z - obj2Z) * (obj1Z - obj2Z);
 
-            if (squaredDistance < squaredHitDistance)
-                return true;
+
+            if (squaredDistance < squaredHitDistance) {
+                Log.d("Hit", "hit");
+                return true; }
             return false;
         }
 
