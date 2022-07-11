@@ -19,7 +19,7 @@ public class MeshObjectLoader {
 
     private static String TAG = "ObjectLoader";
     private static int BUFFER_READER_SIZE = 65536;
-    private static boolean ENABLE_LOGGING = true;
+    private static boolean ENABLE_LOGGING = false;
 
     /**
      * Load 3D model mesh from inputstream.
@@ -158,8 +158,8 @@ public class MeshObjectLoader {
                 mVertexBuffer.put(vlist.get(fixedIndex(vlistSize, (int) (face.fx * 3 + 1), numVerts)));
                 mVertexBuffer.put(vlist.get(fixedIndex(vlistSize, (int) (face.fx * 3 + 2), numVerts)));
 
-                mTexBuffer.put(tlist.get(fixedIndex(tlistSize, face.fy * 2, numTexCoords)));
-                mTexBuffer.put(tlist.get(fixedIndex(tlistSize, face.fy * 2 + 1, numTexCoords)));
+                /*mTexBuffer.put(tlist.get(fixedIndex(tlistSize, face.fy * 2, numTexCoords)));
+                mTexBuffer.put(tlist.get(fixedIndex(tlistSize, face.fy * 2 + 1, numTexCoords)));*/
 
 
                 mNormBuffer.put(nlist.get(fixedIndex(nlistSize, face.fz * 3, numNormals)));

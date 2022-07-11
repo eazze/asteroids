@@ -3,28 +3,33 @@ package de.hs_kl.gatav.flyingsaucerfull;
 
 import static de.hs_kl.gatav.flyingsaucerfull.util.Utilities.normalize;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.FloatBuffer;
-import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 import javax.microedition.khronos.opengles.GL11;
 
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
+import android.media.AudioAttributes;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
-import android.view.MotionEvent;
-import android.widget.Toast;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.RequiresApi;
+import androidx.annotation.UiThread;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import de.hs_kl.gatav.flyingsaucerfull.objects.Asteroid;
 import de.hs_kl.gatav.flyingsaucerfull.objects.BorgCube;
@@ -32,42 +37,123 @@ import de.hs_kl.gatav.flyingsaucerfull.objects.Obstacle;
 import de.hs_kl.gatav.flyingsaucerfull.objects.Shot;
 import de.hs_kl.gatav.flyingsaucerfull.objects.SpaceObject;
 import de.hs_kl.gatav.flyingsaucerfull.objects.SpaceShip;
-import de.hs_kl.gatav.flyingsaucerfull.objects.Starship;
-import de.hs_kl.gatav.flyingsaucerfull.util.MeshObjectLoader;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class SpaceGLSurfaceView extends GLSurfaceView {
+    private static float health = 3f;
+    private static int highscoreEnd = 0;
     private SpaceRenderer renderer;
     public Context context;
 
-    private static final int obstacleCount = 6;
+    public float boundaryTop, boundaryBottom, boundaryLeft, boundaryRight;
+
+    private static final int obstacleCount = 8;
     private static final float minSpawnDistanceToPlayer = 1.5f;
     private static final float minSpawnDistanceBetweenObstacles = 1.5f;
-    private static final float asteroidMinScale = 0.2f;
+    private static final float asteroidMinScale = 0.5f;
     private static final float asteroidMaxScale = 1.0f;
+    public int highscore = 0;
+    public TextView highscoreText;
     private GL10 glm;
+    private ImageView[] lifeIcons;
+    private ConstraintLayout gamePlayOverlay;
+    private ConstraintLayout gameOverOverlay;
+    private TextView gameOverText;
+    public MediaPlayer mpg = null;
+
+
 
     private float[] dirVec = {0f, 0f, 1f};
 
-    long lastShot = 0;
+    private long lastShot = 0;
 
 
     private ArrayList<Obstacle> obstacles = new ArrayList<Obstacle>();
     private SpaceShip ship = new SpaceShip(getResourceShipModel());
-    private Starship starship = new Starship();
     private ArrayList<Shot> shotArray = new ArrayList<Shot>();
-
-    {
-        obstacles.add(starship);
-    }
+    private ArrayList<Obstacle> obstaclesToBeRemoved = new ArrayList<Obstacle>();
 
     public SpaceGLSurfaceView(Context context) throws IOException {
         super(context);
         renderer = new SpaceRenderer();
         setRenderer(renderer);
-
         setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+        mpg = new MediaPlayer();
+        mpg.setAudioAttributes(
+                new AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .build()
+        );
     }
+
+
+    @UiThread
+    public void death() {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
+            @Override
+            public void run() {
+                if (health == 0f) {
+                    Log.d("UI thread", "I am the UI thread");
+                    setGameOverlay();
+                }
+                if (health == 3f && gameOverOverlay.getVisibility() == View.VISIBLE) {
+                    gamePlayOverlay.setVisibility(View.VISIBLE);
+                    gameOverOverlay.setVisibility(View.INVISIBLE);
+                    lifeIcons[0].setVisibility(View.VISIBLE);
+                    lifeIcons[1].setVisibility(View.VISIBLE);
+                    lifeIcons[2].setVisibility(View.VISIBLE);
+                }
+            }
+        });
+    }
+
+    public void playSound(String sound) {
+
+        MediaPlayer mpg = new MediaPlayer();
+
+        if (mpg.isPlaying()) mpg.stop();
+        try {
+            try {
+                AssetFileDescriptor afd = context.getApplicationContext().getAssets().openFd("sfx/" + sound);
+                mpg.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+                mpg.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            } catch (NullPointerException e) {
+                Log.d("Nullpointer", "true");
+            }
+
+            mpg.prepare();
+            mpg.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+
+                    mp.reset();
+                    mp.release();
+                    mp = null;
+                }
+            });
+            mpg.start();
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    public void setGameOverlay() {
+        if (gamePlayOverlay.getVisibility() == View.VISIBLE) {
+            gamePlayOverlay.setVisibility(View.INVISIBLE);
+            gameOverOverlay.setVisibility(View.VISIBLE);
+            gameOverText.setText("Game Over! Dein Highscore beträgt: " + getHighscoreEnd());
+        }
+    }
+
+    public static int getHighscoreEnd() {
+        return highscoreEnd;
+    }
+
 
     private InputStream getResourceShipModel() {
         AssetManager am = getContext().getAssets();
@@ -79,13 +165,158 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
         return null;
     }
 
-    // called from sensor
+    private InputStream getResourceShotModel() {
+        AssetManager am = getContext().getAssets();
+        try {
+            return am.open("shot.obj");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private InputStream getResourceAsteroidModel() {
+        AssetManager am = getContext().getAssets();
+        try {
+            return am.open("asteroid.obj");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void updateScore(TextView highscoreText) {
+        this.highscoreText = highscoreText;
+    }
+
     public void setShipVelocity(float vx, float vy, float vz) {
         ship.setVelocity(vx, vy, vz);
     }
 
+    public void restart() {
+        ship.resetHealth();
+        ship.setPosition(0, 0, 0);
+        health = 3f;
+        highscore = 0;
+        highscoreEnd = 0;
+    }
+
+    public void spawnObstacles() {
+        if (obstacleCount / 2 > obstacles.size()) {
+            for (int i = 0; i < obstacleCount / 2 - obstacles.size(); ++i) {
+
+                float scale = 1.0f;
+                scale = (float) Math.random() * (asteroidMaxScale - asteroidMinScale) + asteroidMinScale;
+
+                float spawnX = 0.0f;
+                float spawnZ = 0.0f;
+                float spawnOffset = scale * 0.5f;
+                float velocity[] = new float[3];
+
+                // determine source and destination quadrant
+                int sourceCode = ((Math.random() < 0.5 ? 0 : 1) << 1) | (Math.random() < 0.5 ? 0 : 1);  // source quadrant
+                int destCode = sourceCode ^ 3;    // destination quadrant is opposite of source
+                //Log.d("Code", sourceCode+" "+destCode);
+
+                /* sourceCode, destCode
+                 * +----+----+
+                 * | 00 | 01 |
+                 * +----+----+
+                 * | 10 | 11 |
+                 * +----+----+
+                 */
+
+                // calculate source vertex position, <0.5 horizontal, else vertical
+                if (Math.random() < 0.5) {  // horizontal placing, top or bottom
+                    spawnZ = (sourceCode & 2) > 0 ? boundaryBottom - spawnOffset : boundaryTop + spawnOffset;
+                    spawnX = (sourceCode & 1) > 0 ? boundaryRight * (float) Math.random() : boundaryLeft * (float) Math.random();
+                } else {  // vertical placing, left or right
+                    spawnZ = (sourceCode & 2) > 0 ? boundaryBottom * (float) Math.random() : boundaryTop * (float) Math.random();
+                    spawnX = (sourceCode & 1) > 0 ? boundaryRight + spawnOffset : boundaryLeft - spawnOffset;
+                }
+
+                // calculate destination vertex position, <0.5 horizontal, else vertical
+                if (Math.random() < 0.5) {  // horizontal placing, top or bottom
+                    velocity[2] = (destCode & 2) > 0 ? boundaryBottom - spawnOffset : boundaryTop + spawnOffset;
+                    velocity[0] = (destCode & 1) > 0 ? boundaryRight * (float) Math.random() : boundaryLeft * (float) Math.random();
+                } else {  // vertical placing, left or right
+                    velocity[2] = (destCode & 2) > 0 ? boundaryBottom * (float) Math.random() : boundaryTop * (float) Math.random();
+                    velocity[0] = (destCode & 1) > 0 ? boundaryRight + spawnOffset : boundaryLeft - spawnOffset;
+                }
+
+                // calculate velocity
+                velocity[0] -= spawnX;
+                velocity[2] -= spawnZ;
+                normalize(velocity);
+
+
+                boolean positionOk = true;
+
+                // check distance to other obstacles
+                for (Obstacle obstacle : obstacles) {
+                    float minDistance = 0.5f * scale + 0.5f * obstacle.scale + minSpawnDistanceBetweenObstacles;
+                    if (Math.abs(spawnX - obstacle.getX()) < minDistance
+                            && Math.abs(spawnZ - obstacle.getZ()) < minDistance)
+                        positionOk = false;    // Distance too small -> invalid position
+                }
+
+                // check distance to player
+                float minPlayerDistance = 0.5f * scale + 0.5f * ship.scale + minSpawnDistanceToPlayer;
+                if (Math.abs(spawnX - ship.getX()) < minPlayerDistance &&
+                        Math.abs(spawnZ - ship.getZ()) < minPlayerDistance)
+                    positionOk = false;    // Distance to player too small -> invalid position
+
+                if (!positionOk)
+                    continue; // Invalid spawn position -> try again next time
+
+                Asteroid newAsteroid = new Asteroid(getResourceAsteroidModel());
+                newAsteroid.scale = scale;
+                newAsteroid.randomizeRotationAxis();
+                newAsteroid.angularVelocity = 50;
+                newAsteroid.setPosition(spawnX, 0, spawnZ);
+                newAsteroid.velocity = velocity;
+                obstacles.add(newAsteroid);
+
+            }
+        }
+    }
+
+    public void spawnObstacles(Obstacle obstacleDestroyed) {
+        playSound("crack1.wav");
+        if (obstacleCount > obstacles.size() && obstacleDestroyed.scale > 0.25f) {
+            for (int i = -1; i < 2; i += 2) {
+
+
+                float scale = obstacleDestroyed.scale / 2;
+                float spawnOffset = scale * 0.5f * i;
+                float spawnX = obstacleDestroyed.getX() + spawnOffset;
+                float spawnZ = obstacleDestroyed.getZ() + spawnOffset;
+
+                float velocity[] = new float[3];
+
+
+                // calculate velocity
+                velocity[0] -= spawnX * i;
+                velocity[2] -= spawnZ * i;
+                normalize(velocity);
+
+
+                Asteroid newAsteroid = new Asteroid(getResourceAsteroidModel());
+                newAsteroid.scale = scale;
+                newAsteroid.randomizeRotationAxis();
+                newAsteroid.angularVelocity = 50 * i;
+                newAsteroid.setPosition(spawnX, 0, spawnZ);
+                newAsteroid.velocity = velocity;
+                obstaclesToBeRemoved.add(obstacleDestroyed);
+                obstacles.add(newAsteroid);
+            }
+        } else {
+            obstaclesToBeRemoved.add(obstacleDestroyed);
+        }
+    }
+
     public void spawnNewShot() {
-        if(System.currentTimeMillis() - lastShot  > 150) {
+        if (System.currentTimeMillis() - lastShot > 150) {
             float[] shotDir = getShipViewDirection();
             float scale = 0.2f;
 
@@ -98,7 +329,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             velocity[2] = spawnZ + spawnOffset;
             normalize(velocity);
 
-            Shot newShot = new Shot();
+            Shot newShot = new Shot(getResourceShotModel());
             newShot.scale = scale;
             newShot.velocity = velocity;
             newShot.setPosition(spawnX, 0, spawnZ);
@@ -112,44 +343,26 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
 
     }
 
-    private void breakAsteroid(Obstacle obstacle) {
-        if(obstacle.scale > 0.25f) {
-            Log.d("Scale", obstacle.scale/2 + "");
-            Asteroid newAsteroid1 = new Asteroid();
-            Asteroid newAsteroid2 = new Asteroid();
-            newAsteroid1.scale = obstacle.scale/2;
-            newAsteroid2.scale = obstacle.scale/2;
-            newAsteroid1.randomizeRotationAxis();
-            newAsteroid2.randomizeRotationAxis();
-            newAsteroid1.angularVelocity = 50;
-            newAsteroid2.angularVelocity = 50;
-            newAsteroid1.setPosition(obstacle.getX(), 0, obstacle.getZ());
-            newAsteroid2.setPosition(obstacle.getX(), 0, obstacle.getZ());
-            newAsteroid1.velocity = obstacle.velocity;
-            newAsteroid2.velocity = obstacle.velocity;
-            obstacles.add(newAsteroid1);
-            obstacles.add(newAsteroid2);
-            obstacles.remove(obstacle);
-        }
-
+    public void setLifeIcons(ImageView[] lifeIcons) {
+        this.lifeIcons = lifeIcons;
     }
 
-    // enable support from starship enterprise
-    /*@Override
-    public boolean onTouchEvent(MotionEvent event) {
-        switch (event.getAction() & MotionEvent.ACTION_MASK) {
-            case MotionEvent.ACTION_DOWN:
-                starship.enabled = true;
-                Toast.makeText(context, "support granted", Toast.LENGTH_SHORT).show();
-                break;
-        }
-        return true;
-    }*/
+    public void setGamePlayOverlay(ConstraintLayout gamePlayOverlay) {
+        this.gamePlayOverlay = gamePlayOverlay;
+    }
+
+    public void setGameOverOverlay(ConstraintLayout gameOverOverlay) {
+        this.gameOverOverlay = gameOverOverlay;
+    }
+
+    public void setGameOverText(TextView gameOverText) {
+        this.gameOverText = gameOverText;
+    }
+
 
     private class SpaceRenderer implements Renderer {
         private float[] modelViewScene = new float[16];
 
-        public float boundaryTop, boundaryBottom, boundaryLeft, boundaryRight;
 
         long lastFrameTime;
 
@@ -165,18 +378,21 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             long delta = System.currentTimeMillis() - lastFrameTime;
             float fracSec = (float) delta / 1000;
             lastFrameTime = System.currentTimeMillis();
-            glm = gl;
+
 
             // scene updates
             updateShip(fracSec);
             updateObstacles(fracSec);
             updateShot(fracSec);
+            updateHighscore();
+            updateLife();
 
 
             // clear screen and depth buffer
             gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
 
             GL11 gl11 = (GL11) gl;
+            glm = gl;
 
             // load local system to draw scene items
             gl.glMatrixMode(GL10.GL_MODELVIEW);
@@ -184,7 +400,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
 
             ship.draw(gl);
             ArrayList<Obstacle> obstacleCopies = new ArrayList<>();
-            for(Obstacle obstacle : obstacles) {
+            for (Obstacle obstacle : obstacles) {
                 obstacleCopies.add(obstacle);
             }
             for (Obstacle obstacle : obstacleCopies) {
@@ -193,27 +409,44 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             obstacleCopies.clear();
 
             ArrayList<Shot> shotCopies = new ArrayList<>();
-            for(Shot shot : shotArray) {
+            for (Shot shot : shotArray) {
                 shotCopies.add(shot);
             }
-            for(Shot shot : shotCopies) {
+            for (Shot shot : shotCopies) {
                 shot.draw(gl);
-                Log.d("Shot:", shot.hashCode() + "");
             }
             shotCopies.clear();
+
+        }
+
+        private void updateLife() {
+            if (ship.getHealth() == 2f) {
+                lifeIcons[0].setVisibility(View.INVISIBLE);
+                health = 2f;
+            } else if (ship.getHealth() == 1f) {
+                lifeIcons[1].setVisibility(View.INVISIBLE);
+                health = 1f;
+            } else if (ship.getHealth() == 0f) {
+                lifeIcons[2].setVisibility(View.INVISIBLE);
+                health = 0f;
+                death();
+            }
+        }
+
+        private void updateHighscore() {
+            if (highscoreText != null) highscoreText.setText("Highscore: " + highscore);
         }
 
         private void updateShot(float fracSec) {
             ArrayList<Shot> shotsToBeRemoved = new ArrayList<Shot>();
 
 
-            // position update on all obstacles
+            // position update on all shots
             for (Shot shot : shotArray) {
                 shot.update(fracSec);
             }
 
-
-            // check for obstacles that flew out of the viewing area and remove
+            // check for shots that flew out of the viewing area and remove
             // or deactivate them
             for (Shot shot : shotArray) {
                 // offset makes sure that the obstacles don't get deleted or set
@@ -225,27 +458,36 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
                         || (shot.getZ() > boundaryTop + offset)
                         || (shot.getZ() < boundaryBottom - offset)) {
 
-                        shotsToBeRemoved.add(shot);
-            }}
+                    shotsToBeRemoved.add(shot);
+                }
+            }
             // remove obsolete obstacles
             for (Shot shot : shotsToBeRemoved) {
                 shotArray.remove(shot);
             }
-                shotsToBeRemoved.clear();
+            shotsToBeRemoved.clear();
 
 
             // shot collision with asteroid
             ArrayList<Obstacle> obstaclesCopy = new ArrayList<>();
-            for(Obstacle obstacle : obstacles) {
+            for (Obstacle obstacle : obstacles) {
                 obstaclesCopy.add(obstacle);
             }
-            for(Shot shot : shotArray) {
-            for (Obstacle obstacle : obstaclesCopy) {
+            ArrayList<Shot> shotArrayCopy = new ArrayList<>();
+            for (Shot shot : shotArray) {
+                shotArrayCopy.add(shot);
+            }
+            for (Shot shot : shotArrayCopy) {
+                for (Obstacle obstacle : obstaclesCopy) {
                     if (areColliding(shot, obstacle)) {
 
                         Log.d("Attach", "Hit");
+                        if (obstacle instanceof Asteroid) {
+                            highscore += 10;
+                            highscoreEnd += 10;
+                        }
                         shotsToBeRemoved.add(shot);
-                        breakAsteroid(obstacle);
+                        spawnObstacles(obstacle);
                         //ODOT
                     }
                 }
@@ -256,26 +498,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
                 shotArray.remove(shot);
             }
             shotsToBeRemoved.clear();
-/*
-            // check for reactivation of Starship enterprise
-            if (starship.enabled && starship.reActivate()) {
-                float x1, z1, x2, z2, v[] = new float[2];
-
-                x1 = boundaryLeft - starship.scale * 0.5f;
-                x2 = boundaryRight + starship.scale;
-                z1 = ((float) (Math.random()) < 0.5f ? -1f : 1f) * (float) (Math.random()) * boundaryTop * 1.5f;
-                z2 = ((float) (Math.random()) < 0.5f ? -1f : 1f) * (float) (Math.random()) * boundaryTop * 1.5f;
-                v[0] = x2 - x1;
-                v[1] = z2 - z1;
-                normalize(v);
-                v[0] *= 4;
-                v[1] *= 4;
-
-                starship.setPosition(x1, 0, z1);
-                starship.setVelocity(v[0], 0.0f, v[1]);
-            }*/
         }
-
 
 
         private void updateShip(float fracSec) {
@@ -303,13 +526,14 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
 
             if (squaredDistance < squaredHitDistance) {
                 Log.d("Hit", "hit");
-                return true; }
+                return true;
+            }
             return false;
         }
 
 
         private void updateObstacles(float fracSec) {
-            ArrayList<Obstacle> obstaclesToBeRemoved = new ArrayList<Obstacle>();
+
 
             // position update on all obstacles
             for (Obstacle obstacle : obstacles) {
@@ -328,10 +552,7 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
                         || (obstacle.getX() < boundaryLeft - offset)
                         || (obstacle.getZ() > boundaryTop + offset)
                         || (obstacle.getZ() < boundaryBottom - offset)) {
-                    if (obstacle instanceof Starship) {
-                        ((Starship) obstacle).setInactive();
-                    } else
-                        obstaclesToBeRemoved.add(obstacle);
+                    obstaclesToBeRemoved.add(obstacle);
                 }
             }
             // remove obsolete obstacles
@@ -344,8 +565,9 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             // obstacle collision with space ship
             for (Obstacle obstacle : obstacles) {
                 if (areColliding(ship, obstacle)) {
-                        ship.damage(1f); // add some damage to the ship
-                        obstaclesToBeRemoved.add(obstacle);
+                    ship.damage(1f);
+                    playSound("hit1.wav");// add some damage to the ship
+                    obstaclesToBeRemoved.add(obstacle);
                     //ODOT
                 }
             }
@@ -437,113 +659,8 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
 
 
             // Spawn new borg or asteroid obstacles to match the target obstacle count
-            if (obstacleCount > obstacles.size()) {
-                for (int i = 0; i < obstacleCount - obstacles.size(); ++i) {
-                    // determine what kind of obstacle is spawned next
-                    int type = Math.random() < 0.85 ? 1 : 2;  // 1 Asteroid, 2 BorgCube
+            spawnObstacles();
 
-                    float scale = 1.0f;
-                    if (type == 1) {
-                        scale = (float) Math.random() * (asteroidMaxScale - asteroidMinScale) + asteroidMinScale;
-                    }
-
-                    float spawnX = 0.0f;
-                    float spawnZ = 0.0f;
-                    float spawnOffset = scale * 0.5f;
-                    float velocity[] = new float[3];
-
-                    // determine source and destination quadrant
-                    int sourceCode = ((Math.random() < 0.5 ? 0 : 1) << 1) | (Math.random() < 0.5 ? 0 : 1);  // source quadrant
-                    int destCode = sourceCode ^ 3;    // destination quadrant is opposite of source
-                    //Log.d("Code", sourceCode+" "+destCode);
-
-                    /* sourceCode, destCode
-                     * +----+----+
-                     * | 00 | 01 |
-                     * +----+----+
-                     * | 10 | 11 |
-                     * +----+----+
-                     */
-
-                    // calculate source vertex position, <0.5 horizontal, else vertical
-                    if (Math.random() < 0.5) {  // horizontal placing, top or bottom
-                        spawnZ = (sourceCode & 2) > 0 ? boundaryBottom - spawnOffset : boundaryTop + spawnOffset;
-                        spawnX = (sourceCode & 1) > 0 ? boundaryRight * (float) Math.random() : boundaryLeft * (float) Math.random();
-                    } else {  // vertical placing, left or right
-                        spawnZ = (sourceCode & 2) > 0 ? boundaryBottom * (float) Math.random() : boundaryTop * (float) Math.random();
-                        spawnX = (sourceCode & 1) > 0 ? boundaryRight + spawnOffset : boundaryLeft - spawnOffset;
-                    }
-
-                    // calculate destination vertex position, <0.5 horizontal, else vertical
-                    if (Math.random() < 0.5) {  // horizontal placing, top or bottom
-                        velocity[2] = (destCode & 2) > 0 ? boundaryBottom - spawnOffset : boundaryTop + spawnOffset;
-                        velocity[0] = (destCode & 1) > 0 ? boundaryRight * (float) Math.random() : boundaryLeft * (float) Math.random();
-                    } else {  // vertical placing, left or right
-                        velocity[2] = (destCode & 2) > 0 ? boundaryBottom * (float) Math.random() : boundaryTop * (float) Math.random();
-                        velocity[0] = (destCode & 1) > 0 ? boundaryRight + spawnOffset : boundaryLeft - spawnOffset;
-                    }
-
-                    // calculate velocity
-                    velocity[0] -= spawnX;
-                    velocity[2] -= spawnZ;
-                    normalize(velocity);
-
-
-                    boolean positionOk = true;
-
-                    // check distance to other obstacles
-                    for (Obstacle obstacle : obstacles) {
-                        float minDistance = 0.5f * scale + 0.5f * obstacle.scale + minSpawnDistanceBetweenObstacles;
-                        if (Math.abs(spawnX - obstacle.getX()) < minDistance
-                                && Math.abs(spawnZ - obstacle.getZ()) < minDistance)
-                            positionOk = false;    // Distance too small -> invalid position
-                    }
-
-                    // check distance to player
-                    float minPlayerDistance = 0.5f * scale + 0.5f * ship.scale + minSpawnDistanceToPlayer;
-                    if (Math.abs(spawnX - ship.getX()) < minPlayerDistance &&
-                            Math.abs(spawnZ - ship.getZ()) < minPlayerDistance)
-                        positionOk = false;    // Distance to player too small -> invalid position
-
-                    if (!positionOk)
-                        continue; // Invalid spawn position -> try again next time
-
-                    if (type == 1) {
-                        Asteroid newAsteroid = new Asteroid();
-                        newAsteroid.scale = scale;
-                        newAsteroid.randomizeRotationAxis();
-                        newAsteroid.angularVelocity = 50;
-                        newAsteroid.setPosition(spawnX, 0, spawnZ);
-                        newAsteroid.velocity = velocity;
-                        obstacles.add(newAsteroid);
-                    }
-                    if (type == 2) {
-                        BorgCube newBorgCube = new BorgCube();
-                        newBorgCube.scale = scale;
-                        newBorgCube.velocity = velocity;
-                        newBorgCube.setPosition(spawnX, 0, spawnZ);
-                        obstacles.add(newBorgCube);
-                    }
-                }
-            }
-/*
-            // check for reactivation of Starship enterprise
-            if (starship.enabled && starship.reActivate()) {
-                float x1, z1, x2, z2, v[] = new float[2];
-
-                x1 = boundaryLeft - starship.scale * 0.5f;
-                x2 = boundaryRight + starship.scale;
-                z1 = ((float) (Math.random()) < 0.5f ? -1f : 1f) * (float) (Math.random()) * boundaryTop * 1.5f;
-                z2 = ((float) (Math.random()) < 0.5f ? -1f : 1f) * (float) (Math.random()) * boundaryTop * 1.5f;
-                v[0] = x2 - x1;
-                v[1] = z2 - z1;
-                normalize(v);
-                v[0] *= 4;
-                v[1] *= 4;
-
-                starship.setPosition(x1, 0, z1);
-                starship.setVelocity(v[0], 0.0f, v[1]);
-            }*/
         }
 
 
@@ -606,7 +723,6 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             gl.glEnable(GL10.GL_DEPTH_TEST);
         }
 
-
     }
 
     public void setRotationShip(boolean dir) {
@@ -621,39 +737,11 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
     }
 
     public float[] getShipViewDirection() {
-        /*float[] matrix = new float[16];
-
-        ((GL11)glm).glGetFloatv(GL11.GL_MODELVIEW_MATRIX, FloatBuffer.wrap(matrix));
-
-        float[] DOF = new float[3];
-        DOF[0] = matrix[2]; // x
-        DOF[1] = matrix[6]; // y
-        DOF[2] = matrix[10]; // z
-        Log.d("Matrix", Arrays.toString(DOF));*//*
-
-
-        Log.d("rotation", " " + ship.getRotationShip());
         float shipRotation = ship.getRotationShip();
         if (shipRotation < 0f) shipRotation = 360f + shipRotation;
         if (shipRotation > 359f) {
             shipRotation = 1;
         }
-        if (shipRotation > 0) {
-            Log.d("Rotation: ", " " + shipRotation);
-            dirVec[0] = ((int)((dirVec[0] * (float) Math.cos((double) shipRotation) - dirVec[2] * (float) Math.sin((double) shipRotation))*10))/10F;
-            dirVec[2] = ((int)((dirVec[0] * (float) Math.sin((double) shipRotation) + dirVec[2] * (float) Math.cos((double) shipRotation))*10))/10F;
-            normalize(dirVec);
-            Log.d("X: ", " "+ dirVec[0]);
-            Log.d("Y: ", " "+ dirVec[2]);
-            Log.d("Test: ", " " + ((int)( 0.88f)*100)/10f);
-        }*/
-
-        float shipRotation = ship.getRotationShip();
-        if (shipRotation < 0f) shipRotation = 360f + shipRotation;
-        if (shipRotation > 359f) {
-            shipRotation = 1;
-        }
-        //Log.d("ShipRotation: ", shipRotation + "");
 
         if (shipRotation >= 0f && shipRotation <= 90f) {
             dirVec[2] = (float) (shipRotation / 90);
@@ -673,47 +761,8 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             dirVec[1] = 0f;
             dirVec[2] = (float) ((90 - (shipRotation - 270)) / 90) * -1;
         }
-        /*
-         */
+
         normalize(dirVec);
-        //Log.d("X: ", " " + dirVec[0]);
-        //Log.d("Y: ", " " + dirVec[2]);
-            /*float m = (float) Math.sqrt((double) (dirVec[0] * dirVec[0] + dirVec[2] * dirVec[2]));
-            dirVec[0] /= m;
-            dirVec[2] /= m;
-            Log.d("X: ", " "+ dirVec[0]);
-            Log.d("Y: ", " "+ dirVec[2]);
-        }
-        /*
-        if(shipRotation >= 0 && shipRotation <= 90) {
-            if(shipRotation/100f == 0f) {
-                dirVec[0] += 1;
-                dirVec[2] += 0.0f;
-            }
-            if(shipRotation/100f > 0f) {
-             dirVec[0] += -(float) Math.cos((double) shipRotation);
-             dirVec[2] += -(float) Math.sin((double) shipRotation);}
-            Log.d("Grad", "<90");
-        } else if(shipRotation >= 90 && shipRotation <= 180) {
-            dirVec[0] += (float) Math.cos((double) shipRotation);
-            dirVec[2] += -(float) Math.sin((double) shipRotation);
-            Log.d("Grad", "<180");
-        }
-        else if(shipRotation >= 180 && shipRotation <= 270) {
-            dirVec[0] += (float) Math.cos((double) shipRotation);
-            dirVec[2] += (float) Math.sin((double) shipRotation);;
-            Log.d("Grad", "<270");
-        }
-        else if(shipRotation >= 270 && shipRotation <= 360) {
-            dirVec[2] += -(float) Math.cos((double) shipRotation);;
-            dirVec[0] += (float) Math.sin((double) shipRotation);;
-            Log.d("Grad", "<360");
-        }*/
-
-        /*dirVec[2] = (float) Math.cos((double) shipRotation);
-        dirVec[0] = -(float) Math.sin((double) shipRotation);}*/
-
-
         return dirVec;
     }
 
