@@ -1,13 +1,9 @@
-package de.hs_kl.gatav.flyingsaucerfull.objects;
+package de.hs_kl.gatav.Asteroids.objects;
 
 
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
 
-import static de.hs_kl.gatav.flyingsaucerfull.util.Utilities.*;
+import static de.hs_kl.gatav.Asteroids.util.Utilities.*;
 
 import android.os.Build;
 import android.util.Log;
@@ -16,7 +12,7 @@ import androidx.annotation.RequiresApi;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import de.hs_kl.gatav.flyingsaucerfull.util.MeshObjectLoader;
+import de.hs_kl.gatav.Asteroids.util.OBJParser;
 
 public class Asteroid extends Obstacle {
     // current rotation
@@ -29,25 +25,31 @@ public class Asteroid extends Obstacle {
     private static float colorB[] = {0.36f, 0.25f, 0.14f};
 
     private float currentColor[] = new float[3];
-    MeshObjectLoader.MeshArrays modelAsteroid;
+    public static OBJParser.VertArray modelAsteroid;
+
+    public static boolean modelLoaded = false;
+
+    public Asteroid() {
+        randomizeRotationAxis();
+        randomizeColor();
+        scale = 0.05f;
+    }
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     public Asteroid(InputStream resourceShipModel) {
         randomizeRotationAxis();
         randomizeColor();
-
         scale = 0.05f;
-
-        model(resourceShipModel);
+        modelAsteroid = model(resourceShipModel);
+        modelLoaded = true;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public MeshObjectLoader.MeshArrays model(InputStream is) {
-        if (is != null) {
+    public OBJParser.VertArray model(InputStream is) {
+        if (is != null && !modelLoaded) {
             InputStream targetStream = is;
-            modelAsteroid = MeshObjectLoader.loadModelMeshFromStream(targetStream);
-            return modelAsteroid;
+            return OBJParser.loadModelVertices(targetStream);
         } else {
             Log.d("E: ", "File not Found");
             return null;

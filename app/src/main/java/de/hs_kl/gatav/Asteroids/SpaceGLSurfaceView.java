@@ -1,7 +1,7 @@
-package de.hs_kl.gatav.flyingsaucerfull;
+package de.hs_kl.gatav.Asteroids;
 
 
-import static de.hs_kl.gatav.flyingsaucerfull.util.Utilities.normalize;
+import static de.hs_kl.gatav.Asteroids.util.Utilities.normalize;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,12 +31,12 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.UiThread;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
-import de.hs_kl.gatav.flyingsaucerfull.objects.Asteroid;
-import de.hs_kl.gatav.flyingsaucerfull.objects.BorgCube;
-import de.hs_kl.gatav.flyingsaucerfull.objects.Obstacle;
-import de.hs_kl.gatav.flyingsaucerfull.objects.Shot;
-import de.hs_kl.gatav.flyingsaucerfull.objects.SpaceObject;
-import de.hs_kl.gatav.flyingsaucerfull.objects.SpaceShip;
+import de.hs_kl.gatav.Asteroids.objects.Asteroid;
+import de.hs_kl.gatav.Asteroids.objects.BorgCube;
+import de.hs_kl.gatav.Asteroids.objects.Obstacle;
+import de.hs_kl.gatav.Asteroids.objects.Shot;
+import de.hs_kl.gatav.Asteroids.objects.SpaceObject;
+import de.hs_kl.gatav.Asteroids.objects.SpaceShip;
 
 @RequiresApi(api = Build.VERSION_CODES.O)
 public class SpaceGLSurfaceView extends GLSurfaceView {
@@ -269,7 +269,13 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
                 if (!positionOk)
                     continue; // Invalid spawn position -> try again next time
 
-                Asteroid newAsteroid = new Asteroid(getResourceAsteroidModel());
+                Asteroid newAsteroid;
+                if(Asteroid.modelLoaded) {
+                    newAsteroid = new Asteroid();
+                } else {
+                    newAsteroid = new Asteroid(getResourceAsteroidModel());
+                }
+
                 newAsteroid.scale = scale;
                 newAsteroid.randomizeRotationAxis();
                 newAsteroid.angularVelocity = 50;
@@ -301,7 +307,12 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
                 normalize(velocity);
 
 
-                Asteroid newAsteroid = new Asteroid(getResourceAsteroidModel());
+                Asteroid newAsteroid;
+                if(Asteroid.modelLoaded) {
+                    newAsteroid = new Asteroid();
+                } else {
+                    newAsteroid = new Asteroid(getResourceAsteroidModel());
+                }
                 newAsteroid.scale = scale;
                 newAsteroid.randomizeRotationAxis();
                 newAsteroid.angularVelocity = 50 * i;
@@ -329,7 +340,13 @@ public class SpaceGLSurfaceView extends GLSurfaceView {
             velocity[2] = spawnZ + spawnOffset;
             normalize(velocity);
 
-            Shot newShot = new Shot(getResourceShotModel());
+            Shot newShot;
+            if(!Shot.modelLoaded) {
+               newShot = new Shot(getResourceShotModel());
+            } else {
+                newShot = new Shot();
+            }
+
             newShot.scale = scale;
             newShot.velocity = velocity;
             newShot.setPosition(spawnX, 0, spawnZ);

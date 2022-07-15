@@ -1,32 +1,15 @@
-package de.hs_kl.gatav.flyingsaucerfull.objects;
+package de.hs_kl.gatav.Asteroids.objects;
 
-import android.content.Context;
-import android.content.res.AssetManager;
 import android.os.Build;
-import android.os.Environment;
 import android.util.Log;
-import android.widget.Space;
 
 import androidx.annotation.RequiresApi;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import de.hs_kl.gatav.flyingsaucerfull.MainActivity;
-import de.hs_kl.gatav.flyingsaucerfull.R;
-import de.hs_kl.gatav.flyingsaucerfull.SpaceGLSurfaceView;
-import de.hs_kl.gatav.flyingsaucerfull.util.MeshObjectLoader;
+import de.hs_kl.gatav.Asteroids.util.OBJParser;
 
 public class SpaceShip extends SpaceObject {
 
@@ -35,7 +18,7 @@ public class SpaceShip extends SpaceObject {
 
     private static float FULL_HEALTH=3.0f;
     private float health = FULL_HEALTH;
-    public MeshObjectLoader.MeshArrays modelShip;
+    public OBJParser.VertArray modelShip;
     //@formatter:on
     private float rotation = 90f;
     private boolean dir;
@@ -47,15 +30,14 @@ public class SpaceShip extends SpaceObject {
     @RequiresApi(api = Build.VERSION_CODES.O)
     public SpaceShip(InputStream resourceShipModel) {
         scale = 0.05f;
-
         model(resourceShipModel);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public MeshObjectLoader.MeshArrays model(InputStream is) {
+    public OBJParser.VertArray model(InputStream is) {
         if (is != null) {
             InputStream targetStream = is;
-            modelShip = MeshObjectLoader.loadModelMeshFromStream(targetStream);
+            modelShip = OBJParser.loadModelVertices(targetStream);
             return modelShip;
         } else {
             Log.d("E: ", "File not Found");

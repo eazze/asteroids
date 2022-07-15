@@ -1,4 +1,4 @@
-package de.hs_kl.gatav.flyingsaucerfull.objects;
+package de.hs_kl.gatav.Asteroids.objects;
 
 import javax.microedition.khronos.opengles.GL10;
 

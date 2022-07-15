@@ -1,16 +1,12 @@
-package de.hs_kl.gatav.flyingsaucerfull.objects;
+package de.hs_kl.gatav.Asteroids.objects;
 
 import android.util.Log;
 
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
-import de.hs_kl.gatav.flyingsaucerfull.util.MeshObjectLoader;
+import de.hs_kl.gatav.Asteroids.util.OBJParser;
 
 public class Shot extends SpaceObject {
 
@@ -21,20 +17,28 @@ public class Shot extends SpaceObject {
     private static float[] colorBody = {0.8f, 0.8f, 0.8f};
     private float rotation = 90f;
     private float ringRotation = 0.0f;
-    public MeshObjectLoader.MeshArrays modelShot;
+    static OBJParser.VertArray modelShot;
+    public static boolean modelLoaded = false;
+
+    public Shot() {
+
+        scale = 0.03f;
+        modelLoaded = true;
+
+    }
 
     public Shot(InputStream resourceShotModel) {
 
         scale = 0.03f;
-        model(resourceShotModel);
+        modelShot = model(resourceShotModel);
+        modelLoaded = true;
 
     }
 
-    public MeshObjectLoader.MeshArrays model(InputStream is) {
-        if (is != null) {
+    public OBJParser.VertArray model(InputStream is) {
+        if (is != null && !modelLoaded) {
             InputStream targetStream = is;
-            modelShot = MeshObjectLoader.loadModelMeshFromStream(targetStream);
-            return modelShot;
+            return OBJParser.loadModelVertices(targetStream);
         } else {
             Log.d("E: ", "File not Found");
             return null;

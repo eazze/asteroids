@@ -1,4 +1,4 @@
-package de.hs_kl.gatav.flyingsaucerfull.util;
+package de.hs_kl.gatav.Asteroids.util;
 
 public class Utilities {
     public static float normalize(float[] vector) {

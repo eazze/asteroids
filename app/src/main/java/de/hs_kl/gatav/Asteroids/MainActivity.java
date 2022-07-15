@@ -1,4 +1,4 @@
-package de.hs_kl.gatav.flyingsaucerfull;
+package de.hs_kl.gatav.Asteroids;
 
 import android.content.res.AssetFileDescriptor;
 import android.media.AudioAttributes;
@@ -22,6 +22,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import java.io.IOException;
+
+import de.hs_kl.gatav.flyingsaucerfull.R;
 
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class MainActivity extends AppCompatActivity {
